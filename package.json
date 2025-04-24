@@ -3,12 +3,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts"
   },
   "dependencies": {
     "html5parser": "^2.0.2"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1"
+    "@types/node": "^22.14.1",
+    "typescript": "^5.8.3"
   }
 }

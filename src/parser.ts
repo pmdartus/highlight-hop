@@ -1,4 +1,4 @@
-import { parse } from "html5parser";
+import { parse as parseHtml } from "html5parser";
 import { isTagNode, findNode, getClassName, getTextContent } from "./utils.ts";
 
 interface BaseMarker {
@@ -41,8 +41,8 @@ interface ParsedDocument {
  * @param htmlContent - The HTML content as a string
  * @returns An array of objects, each representing a highlight or note
  */
-export function parseHighlightsAndNotes(htmlContent: string): ParsedDocument {
-  const ast = parse(htmlContent, {
+export function parse(htmlContent: string): ParsedDocument {
+  const ast = parseHtml(htmlContent, {
     setAttributeMap: true,
   });
 
@@ -84,7 +84,7 @@ export function parseHighlightsAndNotes(htmlContent: string): ParsedDocument {
       }
 
       if (className === "noteHeading") {
-        
+
       }
     }
   }

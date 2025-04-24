@@ -1,8 +1,8 @@
 import fs from 'node:fs';
-import { parseHighlightsAndNotes } from './parser.ts';
+import { parse } from './parser.ts';
 
 const htmlContent = fs.readFileSync('./samples/none.html', 'utf8');
 
-const highlightsAndNotes = parseHighlightsAndNotes(htmlContent);
+const highlightsAndNotes = parse(htmlContent);
 console.log(highlightsAndNotes);
 
