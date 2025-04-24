@@ -1,0 +1,14 @@
+{
+  "name": "highlight-hop",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "html5parser": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1"
+  }
+}

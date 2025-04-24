@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+      /* Base Options */
+      "skipLibCheck": true,
+      "target": "ESNext",
+      "allowJs": true,
+      "isolatedModules": true,
+      "verbatimModuleSyntax": true,
+      
+      /* Strictness */
+      "strict": true,
+      "noUncheckedIndexedAccess": true,
+      "noImplicitOverride": true,
+      
+      /* Module */
+      "module": "NodeNext",
+      "resolveJsonModule": true,
+      "allowImportingTsExtensions": true,
+
+      "noEmit": true
+    }
+  }
