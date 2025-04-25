@@ -3,14 +3,18 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "lint": "eslint .",
     "test": "vitest"
   },
   "dependencies": {
     "html5parser": "^2.0.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.25.1",
     "@types/node": "^22.14.1",
+    "eslint": "^9.25.1",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.0",
     "vitest": "^1.6.1"
   }
 }

@@ -1,13 +1,8 @@
 import { parse as parseHtml } from "html5parser";
-import { isTagNode, findNode, getClassName, getTextContent, isTextNode } from "./utils.ts";
 
+import { isTagNode, findNode, getClassName, getTextContent } from "./utils.ts";
 import type { Notebook, Marker, MarkerType } from "./types.ts";
 
-/**
- * Parses an HTML document or string to extract highlights and notes.
- * @param htmlContent - The HTML content as a string
- * @returns An array of objects, each representing a highlight or note
- */
 export function parse(htmlContent: string): Notebook {
   const ast = parseHtml(htmlContent, {
     setAttributeMap: true,
