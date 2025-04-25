@@ -1,9 +1,24 @@
-import { parse as parseHtml } from "html5parser";
+import { parse as parseHtml, type ITag } from "html5parser";
+import { type INode } from "html5parser";
 
 import { isTagNode, findNode, getClassName, getTextContent } from "./utils.ts";
 import type { Notebook, Marker, MarkerType } from "./types.ts";
 
 export function parse(htmlContent: string): Notebook {
+  const container = parseHtmlContent(htmlContent);
+  const notebook = extractMetadataAndMarkers(container.body ?? []);
+  const markers = mergeHighlightsAndNotes(notebook.markers);
+
+  return {
+    ...notebook,
+    markers,
+  };
+}
+
+/**
+ * Parses the HTML content and returns the root container element.
+ */
+function parseHtmlContent(htmlContent: string): ITag {
   const ast = parseHtml(htmlContent, {
     setAttributeMap: true,
   });
@@ -23,108 +38,131 @@ export function parse(htmlContent: string): Notebook {
   if (!container || !isTagNode(container) || !container.body) {
     throw new Error("Could not locate root container element.");
   }
-  
-  let section: string | undefined;
-  
+  return container;
+}
+
+/**
+ * Extracts metadata and all markers from the HTML content
+ */
+function extractMetadataAndMarkers(nodes: INode[]): Notebook {
   let title: string | undefined;
   let authors: string | undefined;
   const markers: Marker[] = [];
 
+  let currentSection: string | undefined;
+  let currentHeading: SectionHeading | undefined;
 
-  // Filter out non relevant elements.
-  const childrenTags = container.body.filter(isTagNode);
-
-  for (let i = 0; i < childrenTags.length; i++) {
-    const elm = childrenTags[i]!;
+  // Filter out non relevant elements
+  const elements = nodes.filter(isTagNode);
+  for (const elm of elements) {
     const className = getClassName(elm);
 
-    // Metadata
-    if (className === "bookTitle") {
-      title = getTextContent(elm);
-    } else if (className === "authors") {
-      authors = getTextContent(elm);
-    } else if (className === "citation") {
-      // Ignore citation.
-    } else if (className === "sectionHeading") {
-      section = getTextContent(elm);
-    } else if (className === "noteHeading") {
-      const content = getTextContent(elm);
-      
-      const sectionHeading = parseSectionHeading(content);
-      if (!sectionHeading) {
-        throw new Error("Could not parse section heading.");
+    switch (className) {
+      // Metadata
+      case "notebookFor":
+        // Ignore notebookFor
+        break;
+      case "bookTitle": {
+        title = getTextContent(elm);
+        break;
+      }
+      case "authors": {
+        authors = getTextContent(elm);
+        break;
+      }
+      case "citation": {
+        // Ignore citation
+        break;
       }
 
-      // Ignore bookmarks.
-      if (sectionHeading.type === "Bookmark") {
-        continue;
+      case "sectionHeading": {
+        currentSection = getTextContent(elm);
+        break;
       }
 
-      // Check for the main text node following the heading
-      const mainTextNode = childrenTags[i + 1];
-      if (!mainTextNode || getClassName(mainTextNode) !== "noteText") {
-        // This might happen if the structure is unexpected, 
-        // or potentially for bookmarks if they weren't filtered earlier.
-        const foundNodeDescription = mainTextNode ? `node with class ${getClassName(mainTextNode)}` : "nothing";
-        console.warn(`Expected noteText node after noteHeading, but found ${foundNodeDescription}. Skipping marker.`);
-        continue; // Skip this marker
-      }
-      const mainText = getTextContent(mainTextNode);
-
-      let userNoteText: string | undefined = undefined;
-
-      // Look ahead for a user note associated with a highlight
-      if (sectionHeading.type === "Highlight") {
-        const nextHeadingNode = childrenTags[i + 2];
-        const nextTextNode = childrenTags[i + 3];
-
-        if (
-          nextHeadingNode &&
-          getClassName(nextHeadingNode) === "noteHeading" &&
-          nextTextNode &&
-          getClassName(nextTextNode) === "noteText"
-        ) {
-          const nextHeadingContent = getTextContent(nextHeadingNode);
-          // Simple check: Does the next heading start with 'Note'? 
-          // A more robust check might parse the full next SectionHeading
-          if (nextHeadingContent.startsWith("Note")) {
-            userNoteText = getTextContent(nextTextNode);
-            // Skip the note heading and text elements we just processed
-            i += 2; 
-          }
+      case "noteHeading": {
+        const content = getTextContent(elm);
+        const sectionHeading = parseSectionHeading(content);
+        if (!sectionHeading) {
+          throw new Error("Failed to parse section heading.");
         }
+
+        // Ignore bookmarks
+        if (sectionHeading.type === "Bookmark") {
+          continue;
+        }
+
+        // Set current heading
+        currentHeading = sectionHeading;
+        break;
       }
 
-      // Create the marker
-      if (sectionHeading.type === "Note") {
-        markers.push({
-          type: "Note",
-          chapter: sectionHeading.chapter,
-          location: sectionHeading.location,
-          page: sectionHeading.page,
-          section: section,
-          text: mainText, // Main text is the note content
-        });
-      } else if (sectionHeading.type === "Highlight") {
-        markers.push({
-          type: "Highlight",
-          color: sectionHeading.color!, // Non-null assertion ok based on parseSectionHeading logic
-          chapter: sectionHeading.chapter,
-          location: sectionHeading.location,
-          page: sectionHeading.page,
-          section: section,
-          text: mainText, // Main text is the highlighted content
-          note: userNoteText, // Optional user note text found by lookahead
-        });
+      case "noteText": {
+        if (!currentHeading) {
+          throw new Error("No current heading found.");
+        }
+
+        const content = getTextContent(elm);
+        const shared = {
+          location: currentHeading.location,
+          chapter: currentHeading.chapter,
+          page: currentHeading.page,
+          section: currentSection,
+          text: content,
+        };
+
+        if (currentHeading.type === "Highlight") {
+          markers.push({
+            type: "Highlight",
+            color: currentHeading.color!,
+            note: undefined,
+            ...shared,
+          });
+        } else if (currentHeading.type === "Note") {
+          markers.push({
+            type: "Note",
+            ...shared,
+          });
+        }
+
+        // Reset current heading
+        currentHeading = undefined;
+        break;
       }
     }
   }
 
-  return {
-    title,
-    authors,
-    markers,
-  };
+  if (currentHeading) {
+    throw new Error("Unclosed heading found.");
+  }
+
+  return { title, authors, markers };
+}
+
+/**
+ * Post-process raw markers to merge consecutive eligible highlights and notes
+ * together.
+ */
+function mergeHighlightsAndNotes(markers: Marker[]): Marker[] {
+  return markers.reduce<Marker[]>((acc, marker) => {
+    if (marker.type === "Highlight") {
+      acc.push(marker);
+    } else if (marker.type === "Note") {
+      const lastMarker = acc.at(-1);
+
+      // Assumption: Merge note content with the previous highlight if it
+      // exists and if note is empty.
+      const shouldMerge =
+        lastMarker?.type === "Highlight" && lastMarker?.note === undefined;
+        
+      if (shouldMerge) {
+        lastMarker.note = marker.text;
+      } else {
+        acc.push(marker);
+      }
+    }
+    return acc;
+  }, []);
 }
 
 interface SectionHeading {
@@ -135,7 +173,9 @@ interface SectionHeading {
   color?: string;
 }
 
-export function parseSectionHeading(content: string): SectionHeading | undefined {
+export function parseSectionHeading(
+  content: string
+): SectionHeading | undefined {
   // Extract the section heading type
   const typeMatch = content.match(/^(Highlight|Note|Bookmark)/);
   if (!typeMatch) {
@@ -151,24 +191,24 @@ export function parseSectionHeading(content: string): SectionHeading | undefined
     const colorMatch = content.match(/Highlight\((\w+)\)/);
     result.color = colorMatch?.[1];
   }
-  
+
   // Extract chapter if present
   const chapterMatch = content.match(/- ([^>]+) >/);
   if (chapterMatch?.[1]) {
     result.chapter = chapterMatch[1].trim();
   }
-  
+
   // Extract page if present
   const pageMatch = content.match(/Page (\d+)/);
   if (pageMatch?.[1]) {
     result.page = parseInt(pageMatch[1], 10);
   }
-  
+
   // Extract location
   const locationMatch = content.match(/Location (\d+)/);
   if (locationMatch?.[1]) {
     result.location = parseInt(locationMatch[1], 10);
   }
-  
+
   return result;
 }

@@ -5,13 +5,13 @@ export interface BaseMarker {
   /** The type of marker ("Highlight" or "Note") */
   type: string;
   /** Optional section name where the marker appears */
-  section?: string;
+  section: string | undefined;
   /** Optional chapter name where the marker appears */
-  chapter?: string;
+  chapter: string | undefined;
   /** Optional page number where the marker appears */
-  page?: number;
+  page: number | undefined;
   /** Optional location number where the marker appears */
-  location?: number;
+  location: number | undefined;
 }
 
 /**
@@ -24,7 +24,7 @@ export interface Highlight extends BaseMarker {
   /** The highlighted text content */
   text: string;
   /** Optional note associated with the highlight */
-  note?: string;
+  note: string | undefined;
 }
 
 /**
