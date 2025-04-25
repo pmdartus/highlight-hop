@@ -1,37 +1,7 @@
 import { parse as parseHtml } from "html5parser";
 import { isTagNode, findNode, getClassName, getTextContent, isTextNode } from "./utils.ts";
 
-interface Metadata {
-  title: string | undefined;
-  authors: string | undefined;
-  citation: string | undefined;
-}
-
-interface BaseMarker {
-  type: string;
-  section: string;
-  page: number | undefined;
-  location: number | undefined;
-}
-
-interface Highlight extends BaseMarker {
-  type: "Highlight";
-  color: string;
-  quote: string;
-}
-
-interface Note extends BaseMarker {
-  type: "Note";
-  text: string;
-}
-
-type Marker = Highlight | Note;
-type MarkerType = Marker["type"];
-
-interface Notebook {
-  metadata: Metadata;
-  markers: Marker[];
-}
+import type { Notebook, Marker, MarkerType } from "./types.ts";
 
 /**
  * Parses an HTML document or string to extract highlights and notes.
@@ -59,14 +29,10 @@ export function parse(htmlContent: string): Notebook {
     throw new Error("Could not locate root container element.");
   }
   
-  let currentSection: string | undefined;
-  let currentHighlight: Highlight | undefined;
+  let section: string | undefined;
   
-  const metadata: Metadata = {
-    title: undefined,
-    authors: undefined,
-    citation: undefined,
-  };
+  let title: string | undefined;
+  let authors: string | undefined;
   const markers: Marker[] = [];
 
 
@@ -79,15 +45,13 @@ export function parse(htmlContent: string): Notebook {
 
     // Metadata
     if (className === "bookTitle") {
-      metadata.title = getTextContent(elm);
+      title = getTextContent(elm);
     } else if (className === "authors") {
-      metadata.authors = getTextContent(elm);
+      authors = getTextContent(elm);
     } else if (className === "citation") {
-      metadata.citation = getTextContent(elm);
-    }
-
-    if (className === "sectionHeading") {
-      currentSection = getTextContent(elm);
+      // Ignore citation.
+    } else if (className === "sectionHeading") {
+      section = getTextContent(elm);
     } else if (className === "noteHeading") {
       const content = getTextContent(elm);
       
@@ -101,31 +65,79 @@ export function parse(htmlContent: string): Notebook {
         continue;
       }
 
-      const nextElm = childrenTags[i + 1];
-      if (!nextElm || !isTextNode(nextElm) || getClassName(nextElm) !== "noteText") {
-        throw new Error("Could not find text node after section heading.");
-      } 
+      // Check for the main text node following the heading
+      const mainTextNode = childrenTags[i + 1];
+      if (!mainTextNode || getClassName(mainTextNode) !== "noteText") {
+        // This might happen if the structure is unexpected, 
+        // or potentially for bookmarks if they weren't filtered earlier.
+        const foundNodeDescription = mainTextNode ? `node with class ${getClassName(mainTextNode)}` : "nothing";
+        console.warn(`Expected noteText node after noteHeading, but found ${foundNodeDescription}. Skipping marker.`);
+        continue; // Skip this marker
+      }
+      const mainText = getTextContent(mainTextNode);
 
-      if (sectionHeading.type === "Highlight" || sectionHeading.type === "Note") {
-        
+      let userNoteText: string | undefined = undefined;
 
-        const nextText = getTextContent(nextElm);
+      // Look ahead for a user note associated with a highlight
+      if (sectionHeading.type === "Highlight") {
+        const nextHeadingNode = childrenTags[i + 2];
+        const nextTextNode = childrenTags[i + 3];
+
+        if (
+          nextHeadingNode &&
+          getClassName(nextHeadingNode) === "noteHeading" &&
+          nextTextNode &&
+          getClassName(nextTextNode) === "noteText"
+        ) {
+          const nextHeadingContent = getTextContent(nextHeadingNode);
+          // Simple check: Does the next heading start with 'Note'? 
+          // A more robust check might parse the full next SectionHeading
+          if (nextHeadingContent.startsWith("Note")) {
+            userNoteText = getTextContent(nextTextNode);
+            // Skip the note heading and text elements we just processed
+            i += 2; 
+          }
+        }
+      }
+
+      // Create the marker
+      if (sectionHeading.type === "Note") {
+        markers.push({
+          type: "Note",
+          chapter: sectionHeading.chapter,
+          location: sectionHeading.location,
+          page: sectionHeading.page,
+          section: section,
+          text: mainText, // Main text is the note content
+        });
+      } else if (sectionHeading.type === "Highlight") {
+        markers.push({
+          type: "Highlight",
+          color: sectionHeading.color!, // Non-null assertion ok based on parseSectionHeading logic
+          chapter: sectionHeading.chapter,
+          location: sectionHeading.location,
+          page: sectionHeading.page,
+          section: section,
+          text: mainText, // Main text is the highlighted content
+          note: userNoteText, // Optional user note text found by lookahead
+        });
       }
     }
   }
 
   return {
-    metadata,
+    title,
+    authors,
     markers,
   };
 }
 
 interface SectionHeading {
-  type: "Note" | "Highlight" | "Bookmark";
-  color?: string;
-  section?: string;
+  type: "Bookmark" | "Note" | "Highlight";
+  chapter?: string;
   location?: number;
   page?: number;
+  color?: string;
 }
 
 export function parseSectionHeading(content: string): SectionHeading | undefined {
@@ -145,10 +157,10 @@ export function parseSectionHeading(content: string): SectionHeading | undefined
     result.color = colorMatch?.[1];
   }
   
-  // Extract section if present
-  const section = content.match(/- ([^>]+) >/)?.[1]?.trim();
-  if (section) {
-    result.section = section;
+  // Extract chapter if present
+  const chapterMatch = content.match(/- ([^>]+) >/);
+  if (chapterMatch?.[1]) {
+    result.chapter = chapterMatch[1].trim();
   }
   
   // Extract page if present
