@@ -59,9 +59,9 @@ export function getClassName(node: INode): string | undefined {
  */
 export function getTextContent(node: INode): string {
   if (isTextNode(node)) {
-    return node.value;
+    return node.value.trim();
   } else if (isTagNode(node) && node.body) {
-    return node.body.map(getTextContent).join("");
+    return node.body.map(getTextContent).join("").trim();
   }
   return "";
 } 
