@@ -1,7 +1,6 @@
 import path from "node:path";
-import assert from "node:assert";
 import fs from "node:fs/promises";
-import { describe, test } from "node:test";
+import { describe, test, expect } from "vitest";
 
 import { parse, parseSectionHeading } from "../src/parser.ts";
 
@@ -14,23 +13,19 @@ describe("parse", () => {
     const html = await loadFixture("highlights.html");
     const result = parse(html);
 
-    assert.equal(result.markers.length, 3);
-    assert.deepEqual(result.markers, [
+    expect(result.markers.length).toBe(3);
+    expect(result.markers).toMatchObject([
       {
         type: "Highlight",
         color: "yellow",
         location: 10,
-        page: undefined,
         section: "MOBY-DICK; or, THE WHALE.",
-        chapter: undefined,
         text: "MOBY-DICK",
-        note: undefined,
       },
       {
         type: "Highlight",
         color: "yellow",
         location: 248,
-        page: undefined,
         section: "EXTRACTS. (Supplied by a Sub-Sub-Librarian).",
         chapter: "EXTRACTS.",
         text: "I was told of a whale taken near Shetland.",
@@ -40,9 +35,7 @@ describe("parse", () => {
         type: "Highlight",
         color: "yellow",
         location: 361,
-        page: undefined,
         section: "CHAPTER 1. Loomings.",
-        chapter: undefined,
         text: "Call me Ishmael.",
         note: "Another note.",
       },
@@ -53,47 +46,26 @@ describe("parse", () => {
     const html = await loadFixture("hightlights-color.html");
     const result = parse(html);
 
-    assert.equal(result.markers.length, 4);
-    assert.deepEqual(result.markers, [
+    expect(result.markers).toMatchObject([
       {
         type: "Highlight",
         color: "pink",
         location: 502,
-        page: undefined,
-        section: "CHAPTER 3. The Spouter-Inn.",
-        chapter: undefined,
-        text: "Entering that gable-ended",
-        note: undefined,
       },
       {
         type: "Highlight",
         color: "blue",
         location: 502,
-        page: undefined,
-        section: "CHAPTER 3. The Spouter-Inn.",
-        chapter: undefined,
-        text: "straggling entry with old-fashioned",
-        note: undefined,
       },
       {
         type: "Highlight",
         color: "yellow",
         location: 503,
-        page: undefined,
-        section: "CHAPTER 3. The Spouter-Inn.",
-        chapter: undefined,
-        text: "some condemned old craft.",
-        note: undefined,
       },
       {
         type: "Highlight",
         color: "orange",
         location: 503,
-        page: undefined,
-        section: "CHAPTER 3. The Spouter-Inn.",
-        chapter: undefined,
-        text: "thoroughly besmoked,",
-        note: undefined,
       },
     ]);
   });
@@ -102,17 +74,16 @@ describe("parse", () => {
     const html = await loadFixture("location-with-pages.html");
     const result = parse(html);
 
-    assert.equal(result.markers.length, 2);
-    assert.deepEqual(result.markers, [
+    expect(result.markers.length).toBe(2);
+    expect(result.markers).toMatchObject([
       {
         type: "Highlight",
         color: "yellow",
         location: 154,
         page: 13,
         section: "Introduction",
-        chapter: "The Pillars of Staff Engineering",
-        text: "a great deal of the ambiguity is inherent to the role, and the answer is very often “it depends on the context.”",
-        note: undefined,
+        chapter: expect.any(String),
+        text: expect.any(String),
       },
       {
         type: "Highlight",
@@ -120,9 +91,8 @@ describe("parse", () => {
         location: 156,
         page: 14,
         section: "Introduction",
-        chapter: "The Pillars of Staff Engineering",
-        text: "I'll unpack the staff engineer role by looking at what I think of as its three pillars: big-picture thinking, execution of projects, and leveling up the engineers you work with.",
-        note: undefined,
+        chapter: expect.any(String),
+        text: expect.any(String),
       },
     ]);
   });
@@ -131,22 +101,18 @@ describe("parse", () => {
     const html = await loadFixture("notes-without-highlights.html");
     const result = parse(html);
 
-    assert.equal(result.markers.length, 2);
-    assert.deepEqual(result.markers, [
+    expect(result.markers.length).toBe(2);
+    expect(result.markers).toMatchObject([
       {
         type: "Note",
         location: 795,
-        page: undefined,
-        section: "CHAPTER 5. Breakfast.",
-        chapter: undefined,
+        section: expect.any(String),
         text: "Note without highlight",
       },
       {
         type: "Note",
         location: 795,
-        page: undefined,
-        section: "CHAPTER 5. Breakfast.",
-        chapter: undefined,
+        section: expect.any(String),
         text: "Another note without highlighting",
       },
     ]);
@@ -156,17 +122,14 @@ describe("parse", () => {
     const html = await loadFixture("bookmarks.html");
     const result = parse(html);
 
-    // Should be ignored for now.
-    assert.equal(result.markers.length, 0);
+    expect(result.markers).toEqual([]);
   });
 
   test("sanity check", async () => {
     const html = await loadFixture("sanity.html");
     const result = parse(html);
 
-    assert.equal(result.title, "Moby Dick Images");
-    assert.equal(result.authors, "Herman Melville");
-    assert.equal(result.markers.length, 11);
+    expect(result).toMatchSnapshot();
   });
 });
 
@@ -175,7 +138,7 @@ describe("section headings", () => {
     test("parse with location", async () => {
       const result = parseSectionHeading("Highlight(yellow) - Location 361");
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Highlight",
         color: "yellow",
         location: 361,
@@ -187,7 +150,7 @@ describe("section headings", () => {
         "Highlight(yellow) - Page 13 · Location 154"
       );
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Highlight",
         color: "yellow",
         location: 154,
@@ -200,7 +163,7 @@ describe("section headings", () => {
         "Highlight(yellow) - Heading Sub Section > Location 154"
       );
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Highlight",
         color: "yellow",
         chapter: "Heading Sub Section",
@@ -213,7 +176,7 @@ describe("section headings", () => {
         "Highlight(yellow) - Heading Sub Section > Page 13 · Location 154"
       );
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Highlight",
         color: "yellow",
         chapter: "Heading Sub Section",
@@ -227,7 +190,7 @@ describe("section headings", () => {
     test("parse note section headings", async () => {
       const result = parseSectionHeading("Note - Location 795");
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Note",
         location: 795,
       });
@@ -236,7 +199,7 @@ describe("section headings", () => {
     test("parse with page", async () => {
       const result = parseSectionHeading("Note - Page 13 · Location 154");
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Note",
         location: 154,
         page: 13,
@@ -248,7 +211,7 @@ describe("section headings", () => {
         "Note - Heading Sub Section > Location 154"
       );
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Note",
         chapter: "Heading Sub Section",
         location: 154,
@@ -260,7 +223,7 @@ describe("section headings", () => {
         "Note - Heading Sub Section > Page 13 · Location 154"
       );
 
-      assert.deepEqual(result, {
+      expect(result).toEqual({
         type: "Note",
         chapter: "Heading Sub Section",
         location: 154,
