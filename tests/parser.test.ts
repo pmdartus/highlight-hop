@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { describe, test, expect } from "vitest";
 
-import { parse, parseSectionHeading } from "../src/parser.ts";
+import { parse, parseSectionHeading } from "../src/parser/parser.ts";
 
 function loadFixture(name: string) {
   return fs.readFile(path.join(import.meta.dirname, "fixtures", name), "utf-8");
