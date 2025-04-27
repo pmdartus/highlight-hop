@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 
 // Constants
 const DOMAIN_NAME = "highlight-hop.dartus.fr";
-// const OUTPUT_FORMATS = ["csv", "markdown", "json"];
+const OUTPUT_FORMATS = ["csv", "markdown", "json"];
 
 // S3 bucket for storing raw MIME objects
 const bucket = new aws.s3.BucketV2("email-inbound", {
@@ -144,21 +144,20 @@ new aws.s3.BucketNotification("s3-event-notification", {
   ],
 });
 
-/*
 // SES domain identity
-const sesDomainIdentity = new aws.ses.DomainIdentity("email-domain", {
-  domain: domainName,
+new aws.ses.DomainIdentity("email-domain", {
+  domain: DOMAIN_NAME,
 });
 
 // SES domain DKIM
 const sesDomainDkim = new aws.ses.DomainDkim("email-domain-dkim", {
-  domain: domainName,
+  domain: DOMAIN_NAME,
 });
 
 // SES email identity for each format
-for (const format of outputFormats) {
+for (const format of OUTPUT_FORMATS) {
   new aws.ses.EmailIdentity(`email-identity-${format}`, {
-    email: `${format}@${domainName}`,
+    email: `${format}@${DOMAIN_NAME}`,
   });
 }
 
@@ -167,36 +166,64 @@ const ruleSet = new aws.ses.ReceiptRuleSet("main", {
   ruleSetName: "highlight-hop-rules",
 });
 
-// SES receiving rule for valid formats
-new aws.ses.ReceiptRule("valid-formats", {
-  ruleSetName: ruleSet.ruleSetName,
-  recipients: outputFormats.map(format => `${format}@${domainName}`),
-  enabled: true,
-  scanEnabled: true, // Enable spam and virus scanning
-  addHeaderActions: [{
-    headerName: "X-Original-Recipient",
-    headerValue: "\\${originalRecipient}",
-    position: 1,
-  }],
-  s3Actions: [{
-    bucketName: bucket.id,
-    objectKeyPrefix: "incoming/",
-    position: 2,
-  }],
+// IAM role for SES to write to S3
+const sesRole = new aws.iam.Role("ses-s3-role", {
+  assumeRolePolicy: {
+    Version: "2012-10-17",
+    Statement: [{
+      Action: "sts:AssumeRole",
+      Effect: "Allow",
+      Principal: {
+        Service: "ses.amazonaws.com"
+      }
+    }]
+  }
 });
 
-// SES receiving rule for bounce handling
-new aws.ses.ReceiptRule("bounce-handling", {
-  ruleSetName: ruleSet.ruleSetName,
-  recipients: ["bounces@" + domainName],
+// IAM policy for SES role to write to S3
+new aws.iam.RolePolicy("ses-s3-policy", {
+  role: sesRole.id,
+  policy: {
+    Version: "2012-10-17",
+    Statement: [{
+      Effect: "Allow",
+      Action: "s3:PutObject",
+      Resource: pulumi.interpolate`${bucket.arn}/*`
+    }]
+  }
+});
+
+// S3 bucket policy to allow SES role to write incoming emails
+new aws.s3.BucketPolicy("email-inbound-policy", {
+  bucket: bucket.id,
+  policy: {
+    Version: "2012-10-17",
+    Statement: [{
+      Effect: "Allow",
+      Principal: {
+        AWS: sesRole.arn
+      },
+      Action: "s3:PutObject",
+      Resource: pulumi.interpolate`${bucket.arn}/*`
+    }]
+  }
+});
+
+// SES receiving rule for valid formats
+new aws.ses.ReceiptRule("valid-formats", {
+  name: "valid-formats",
   enabled: true,
-  scanEnabled: true,
-  bounceActions: [{
-    message: "Your email was rejected due to invalid format or spam.",
-    sender: "bounces@" + domainName,
-    smtpReplyCode: "550",
-    statusCode: "5.1.1",
+  ruleSetName: ruleSet.ruleSetName,
+  recipients: OUTPUT_FORMATS.map((format) => `${format}@${DOMAIN_NAME}`),
+  scanEnabled: true, // Enable spam and virus scanning
+  s3Actions: [{
+    bucketName: bucket.id,
     position: 1,
+    iamRoleArn: sesRole.arn,
+  }],
+  stopActions: [{
+    scope: "RuleSet",
+    position: 2,
   }],
 });
 
@@ -204,11 +231,9 @@ new aws.ses.ReceiptRule("bounce-handling", {
 new aws.ses.ActiveReceiptRuleSet("active", {
   ruleSetName: ruleSet.ruleSetName,
 });
-*/
 
 // Export values
 export const bucketName = bucket.id;
 export const queueUrl = emailQueue.arn;
 export const lambdaFunctionArn = processorLambda.arn;
-// export const emailDomainIdentity = sesDomainIdentity.domain;
-// export const emailDomainDkimTokens = sesDomainDkim.dkimTokens;
+export const emailDomainDkimTokens = sesDomainDkim.dkimTokens;
