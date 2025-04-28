@@ -5,6 +5,9 @@ node_modules/
 # macOS
 .DS_Store
 
+# Artifacts
+dist/
+
 # Environment variables
 .env
 .env.local

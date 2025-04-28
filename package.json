@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
-    "test": "vitest"
+    "test": "vitest",
+    "prelambda:build": "rm -rf dist",
+    "lambda:build": "esbuild src/handler.ts --bundle --platform=node --outfile=dist/index.js",
+    "deploy": "pulumi up -C infra"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.525.0",
@@ -17,6 +20,7 @@
     "@pulumi/pulumi": "^3.113.0",
     "@types/aws-lambda": "^8.10.149",
     "@types/node": "^22.14.1",
+    "esbuild": "^0.25.3",
     "eslint": "^9.25.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.0",

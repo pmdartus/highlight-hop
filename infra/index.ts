@@ -116,7 +116,7 @@ const processorLambda = new aws.lambda.Function("email-processor", {
   timeout: 30, // 30 seconds
   memorySize: 256,
   code: new pulumi.asset.AssetArchive({
-    ".": new pulumi.asset.FileArchive("../src"),
+    ".": new pulumi.asset.FileArchive("../dist"),
   }),
   environment: {
     variables: {
