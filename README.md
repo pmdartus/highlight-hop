@@ -6,81 +6,33 @@ A service that converts Kindle highlights from HTML to various formats (CSV, Mar
 
 Highlight Hop is an email-based workflow that converts Kindle highlights exported from iOS/Android Kindle apps (HTML attachment) into user-selected formats and returns the converted file to the user.
 
-## How It Works
+**How It Works:**
 
 1. Send an email with a Kindle highlights HTML attachment to one of the following addresses:
 
-   - `csv@yourdomain.com` - Convert to CSV format
-   - `markdown@yourdomain.com` - Convert to Markdown format
-   - `json@yourdomain.com` - Convert to JSON format
+   - `csv@<domain-name>` - Convert to CSV format
+   - `markdown@<domain-name>` - Convert to Markdown format
+   - `json@<domain-name>` - Convert to JSON format
 
 2. The service processes the email, extracts the highlights, and converts them to the requested format.
 
 3. The converted file is sent back to you as an email attachment.
 
-## Architecture
+**Architecture:**
 
-The service uses the following AWS components:
+It uses a serverless architecture deployed on AWS. The service uses the following AWS components:
 
-- **Amazon SES** - Receives emails and sends responses
-- **Amazon S3** - Stores raw email attachments temporarily
-- **Amazon SQS** - Queues email processing tasks
-- **AWS Lambda** - Processes highlights and generates output files
+- _Amazon SES_ - Receives emails and sends responses
+- _Amazon S3_ - Stores raw email attachments temporarily
+- _Amazon SQS_ - Queues email processing tasks
+- _AWS Lambda(Node.js)_ - Processes highlights and generates output files
 
-## Deployment
+Detailed reqirements abou the project can be found in the [product brief](./docs/product_brief.md)
 
-### Prerequisites
-
-- Node.js 18.x or later
-- Pulumi CLI
-- AWS CLI configured with appropriate credentials
-
-### Setup
-
-1. Clone this repository:
-
-   ```
-   git clone https://github.com/yourusername/highlight-hop.git
-   cd highlight-hop
-   ```
-
-2. Install dependencies:
-
-   ```
-   npm install
-   ```
-
-3. Configure Pulumi with your email domain:
-
-   ```
-   cd infra
-   ```
-
-4. Deploy the infrastructure:
-
-   ```
-   pulumi up
-   ```
-
-5. Configure SES:
-   - Verify your domain in SES
-   - Set up DKIM for your domain
-   - Configure SES to receive emails for your domain
-
-## Development
-
-### Running Tests
+## Getting started
 
 ```
-npm test
+npm install
+npm run build
+npm run deploy
 ```
-
-### Linting
-
-```
-npm run lint
-```
-
-## License
-
-MIT
