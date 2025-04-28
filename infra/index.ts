@@ -92,7 +92,7 @@ new aws.iam.RolePolicy("email-processor-policy", {
       },
       {
         Effect: "Allow",
-        Action: ["ses:SendRawEmail"],
+        Action: ["ses:SendEmail"],
         Resource: "*",
       },
       {
@@ -130,7 +130,6 @@ const processorLambda = new aws.lambda.Function("email-processor", {
 new aws.lambda.EventSourceMapping("lambda-trigger", {
   eventSourceArn: emailQueue.arn,
   functionName: processorLambda.arn,
-  batchSize: 1, // TODO: Determine if it's preferred to increase batch size.
 });
 
 // S3 event notification to SQS
@@ -153,13 +152,6 @@ new aws.ses.DomainIdentity("email-domain", {
 const sesDomainDkim = new aws.ses.DomainDkim("email-domain-dkim", {
   domain: DOMAIN_NAME,
 });
-
-// SES email identity for each format
-for (const format of OUTPUT_FORMATS) {
-  new aws.ses.EmailIdentity(`email-identity-${format}`, {
-    email: `${format}@${DOMAIN_NAME}`,
-  });
-}
 
 // SES receiving rule set
 const ruleSet = new aws.ses.ReceiptRuleSet("main", {
@@ -215,7 +207,7 @@ new aws.ses.ReceiptRule("valid-formats", {
   enabled: true,
   ruleSetName: ruleSet.ruleSetName,
   recipients: OUTPUT_FORMATS.map((format) => `${format}@${DOMAIN_NAME}`),
-  scanEnabled: true, // Enable spam and virus scanning
+  scanEnabled: true,
   s3Actions: [{
     bucketName: bucket.id,
     position: 1,
