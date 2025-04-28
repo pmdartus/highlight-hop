@@ -40,7 +40,7 @@ export type Marker = Highlight | Note;
 export type MarkerType = Marker["type"];
 
 /**
- * Represents a parsed notebook export 
+ * Represents a parsed notebook export
  */
 export interface Notebook {
   /** The book title */

@@ -22,7 +22,7 @@ export function isTextNode(node: INode): node is IText {
  */
 export function findNode(
   node: INode,
-  predicate: (node: INode) => boolean
+  predicate: (node: INode) => boolean,
 ): INode | null {
   if (predicate(node)) {
     return node;
@@ -64,4 +64,4 @@ export function getTextContent(node: INode): string {
     return node.body.map(getTextContent).join("").trim();
   }
   return "";
-} 
+}

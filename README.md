@@ -9,6 +9,7 @@ Highlight Hop is an email-based workflow that converts Kindle highlights exporte
 ## How It Works
 
 1. Send an email with a Kindle highlights HTML attachment to one of the following addresses:
+
    - `csv@yourdomain.com` - Convert to CSV format
    - `markdown@yourdomain.com` - Convert to Markdown format
    - `json@yourdomain.com` - Convert to JSON format
@@ -37,22 +38,26 @@ The service uses the following AWS components:
 ### Setup
 
 1. Clone this repository:
+
    ```
    git clone https://github.com/yourusername/highlight-hop.git
    cd highlight-hop
    ```
 
 2. Install dependencies:
+
    ```
    npm install
    ```
 
 3. Configure Pulumi with your email domain:
+
    ```
    cd infra
    ```
 
 4. Deploy the infrastructure:
+
    ```
    pulumi up
    ```

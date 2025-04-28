@@ -154,7 +154,7 @@ function mergeHighlightsAndNotes(markers: Marker[]): Marker[] {
       // exists and if note is empty.
       const shouldMerge =
         lastMarker?.type === "Highlight" && lastMarker?.note === undefined;
-        
+
       if (shouldMerge) {
         lastMarker.note = marker.text;
       } else {
@@ -174,7 +174,7 @@ interface SectionHeading {
 }
 
 export function parseSectionHeading(
-  content: string
+  content: string,
 ): SectionHeading | undefined {
   // Extract the section heading type
   const typeMatch = content.match(/^(Highlight|Note|Bookmark)/);

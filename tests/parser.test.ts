@@ -5,7 +5,7 @@ import { describe, test, expect } from "vitest";
 import { parse, parseSectionHeading } from "../src/parser/parser.ts";
 
 function loadFixture(name: string) {
-  return fs.readFile(path.join(import.meta.dirname, "fixtures", name), "utf-8");
+  return fs.readFile(path.join(import.meta.dirname, "__fixtures__", name), "utf-8");
 }
 
 describe("parse", () => {
@@ -147,7 +147,7 @@ describe("section headings", () => {
 
     test("parse with page", async () => {
       const result = parseSectionHeading(
-        "Highlight(yellow) - Page 13 · Location 154"
+        "Highlight(yellow) - Page 13 · Location 154",
       );
 
       expect(result).toEqual({
@@ -160,7 +160,7 @@ describe("section headings", () => {
 
     test("parse with section", async () => {
       const result = parseSectionHeading(
-        "Highlight(yellow) - Heading Sub Section > Location 154"
+        "Highlight(yellow) - Heading Sub Section > Location 154",
       );
 
       expect(result).toEqual({
@@ -173,7 +173,7 @@ describe("section headings", () => {
 
     test("parse with page and section", async () => {
       const result = parseSectionHeading(
-        "Highlight(yellow) - Heading Sub Section > Page 13 · Location 154"
+        "Highlight(yellow) - Heading Sub Section > Page 13 · Location 154",
       );
 
       expect(result).toEqual({
@@ -208,7 +208,7 @@ describe("section headings", () => {
 
     test("parse with section", async () => {
       const result = parseSectionHeading(
-        "Note - Heading Sub Section > Location 154"
+        "Note - Heading Sub Section > Location 154",
       );
 
       expect(result).toEqual({
@@ -220,7 +220,7 @@ describe("section headings", () => {
 
     test("parse with page and section", async () => {
       const result = parseSectionHeading(
-        "Note - Heading Sub Section > Page 13 · Location 154"
+        "Note - Heading Sub Section > Page 13 · Location 154",
       );
 
       expect(result).toEqual({

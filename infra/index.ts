@@ -162,14 +162,16 @@ const ruleSet = new aws.ses.ReceiptRuleSet("main", {
 const sesRole = new aws.iam.Role("ses-s3-role", {
   assumeRolePolicy: {
     Version: "2012-10-17",
-    Statement: [{
-      Action: "sts:AssumeRole",
-      Effect: "Allow",
-      Principal: {
-        Service: "ses.amazonaws.com"
-      }
-    }]
-  }
+    Statement: [
+      {
+        Action: "sts:AssumeRole",
+        Effect: "Allow",
+        Principal: {
+          Service: "ses.amazonaws.com",
+        },
+      },
+    ],
+  },
 });
 
 // IAM policy for SES role to write to S3
@@ -177,12 +179,14 @@ new aws.iam.RolePolicy("ses-s3-policy", {
   role: sesRole.id,
   policy: {
     Version: "2012-10-17",
-    Statement: [{
-      Effect: "Allow",
-      Action: "s3:PutObject",
-      Resource: pulumi.interpolate`${bucket.arn}/*`
-    }]
-  }
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: "s3:PutObject",
+        Resource: pulumi.interpolate`${bucket.arn}/*`,
+      },
+    ],
+  },
 });
 
 // S3 bucket policy to allow SES role to write incoming emails
@@ -190,15 +194,17 @@ new aws.s3.BucketPolicy("email-inbound-policy", {
   bucket: bucket.id,
   policy: {
     Version: "2012-10-17",
-    Statement: [{
-      Effect: "Allow",
-      Principal: {
-        AWS: sesRole.arn
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: {
+          AWS: sesRole.arn,
+        },
+        Action: "s3:PutObject",
+        Resource: pulumi.interpolate`${bucket.arn}/*`,
       },
-      Action: "s3:PutObject",
-      Resource: pulumi.interpolate`${bucket.arn}/*`
-    }]
-  }
+    ],
+  },
 });
 
 // SES receiving rule for valid formats
@@ -208,15 +214,19 @@ new aws.ses.ReceiptRule("valid-formats", {
   ruleSetName: ruleSet.ruleSetName,
   recipients: OUTPUT_FORMATS.map((format) => `${format}@${DOMAIN_NAME}`),
   scanEnabled: true,
-  s3Actions: [{
-    bucketName: bucket.id,
-    position: 1,
-    iamRoleArn: sesRole.arn,
-  }],
-  stopActions: [{
-    scope: "RuleSet",
-    position: 2,
-  }],
+  s3Actions: [
+    {
+      bucketName: bucket.id,
+      position: 1,
+      iamRoleArn: sesRole.arn,
+    },
+  ],
+  stopActions: [
+    {
+      scope: "RuleSet",
+      position: 2,
+    },
+  ],
 });
 
 // SES active rule set

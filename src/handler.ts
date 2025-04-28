@@ -33,7 +33,7 @@ export const handler: SQSHandler = async (event) => {
       if (record.eventSource !== "aws:sqs") {
         console.warn(
           "Event source is not SQS, skipping record:",
-          record.messageId
+          record.messageId,
         );
         continue;
       }
@@ -41,7 +41,7 @@ export const handler: SQSHandler = async (event) => {
       const s3Event: S3Event = JSON.parse(record.body);
       if (!s3Event.Records || !Array.isArray(s3Event.Records)) {
         throw new Error(
-          "SQS message body is not a valid S3 event notification."
+          "SQS message body is not a valid S3 event notification.",
         );
       }
 
@@ -63,7 +63,7 @@ async function processS3EventRecord(record: S3EventRecord) {
   if (record.eventSource !== "aws:s3") {
     console.warn(
       "Event source is not S3, skipping record:",
-      record.eventSource
+      record.eventSource,
     );
     return;
   }
@@ -86,13 +86,14 @@ async function processS3EventRecord(record: S3EventRecord) {
   }
 
   const parsedEmail = await PostalMime.parse(body);
-  const { sender, recipient, format, attachment } = getRequestDetails(parsedEmail);
+  const { sender, recipient, format, attachment } =
+    getRequestDetails(parsedEmail);
 
   const notebook = parse(attachment);
   console.log(
     `Parsed notebook: "${notebook.title ?? "Untitled"}" with ${
       notebook.markers.length
-    } highlights/notes.`
+    } highlights/notes.`,
   );
 
   const {
@@ -137,7 +138,7 @@ async function processS3EventRecord(record: S3EventRecord) {
   });
 
   console.log(
-    `Sending formatted highlights (${outputFilename}) to ${sender}...`
+    `Sending formatted highlights (${outputFilename}) to ${sender}...`,
   );
   await sesClient.send(sendCommand);
   console.log(`Successfully sent email to ${sender}`);
@@ -194,17 +195,17 @@ function getHtmlAttachment(email: Email): string {
     throw new Error("No attachments found in the email.");
   } else if (email.attachments.length > 1) {
     console.warn(
-      `Multiple attachments found (${email.attachments.length}). Processing only the first HTML attachment.`
+      `Multiple attachments found (${email.attachments.length}). Processing only the first HTML attachment.`,
     );
   }
 
   const htmlAttachment = email.attachments.find(
-    (att) => att.mimeType === "text/html"
+    (att) => att.mimeType === "text/html",
   );
 
   if (!htmlAttachment) {
     throw new Error(
-      "No HTML attachment found. Please ensure the email contains one attachment with Content-Type: text/html."
+      "No HTML attachment found. Please ensure the email contains one attachment with Content-Type: text/html.",
     );
   }
 
