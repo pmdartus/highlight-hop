@@ -15,7 +15,7 @@ import {
   formatNotebook,
   SUPPORTED_FORMATS,
   type FormatType,
-} from "./formatter/index.ts";
+} from "./formatter.ts";
 
 const s3Client = new S3Client();
 const sesClient = new SESv2Client();
@@ -143,7 +143,6 @@ async function processS3EventRecord(record: S3EventRecord) {
   await sesClient.send(sendCommand);
   console.log(`Successfully sent email to ${sender}`);
 }
-
 interface ProcessingRequest {
   messageId: string;
   sender: string;

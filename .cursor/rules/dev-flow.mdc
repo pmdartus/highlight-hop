@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Workflow - Highlight Hop
+
+## Repository Overview
+Highlight Hop is a serverless application that converts Kindle highlights from HTML to various formats (CSV, Markdown, JSON) through an email-based workflow.
+
+## Project Structure
+- `src/`: Core application code
+  - `handler.ts`: AWS Lambda handler for processing emails
+  - `parser/`: Code for parsing Kindle highlights from HTML
+  - `formatter/`: Code for converting highlights to different formats
+- `infra/`: Pulumi infrastructure code for AWS deployment
+- `tests/`: Test cases and fixtures
+- `docs/`: Project documentation, including product brief
+
+## Development Commands
+- **Setup**: `npm install`
+- **Linting**: `npm run lint`
+- **Formatting**: `npm run format`
+- **Type Checking**: `npm run typecheck`
+- **Testing**: `npm run test`
+- **Building**: `npm run build`
+- **Deployment**: `npm run deploy`
+
+## Development Flow
+1. **Local Development**:
+   - Make code changes in the `src/` directory
+   - Run `npm run format` to maintain consistent code style
+   - Run `npm run lint` to catch potential issues
+   - Run `npm run typecheck` to verify type correctness
+   - Run `npx vitest run` to verify functionality
+
+2. **Testing**:
+   - Unit tests are in the `tests/` directory
+   - Test fixtures are in `tests/__fixtures__/`
+   - Run tests with `npx vitest run`
+
+3. **Deployment**:
+   - Build the project with `npm run build`
+   - Deploy to AWS with `npm run deploy`
+   - The deployment uses Pulumi to provision AWS resources
+
+## Architecture
+- **Amazon SES**: Receives and sends emails
+- **Amazon S3**: Temporarily stores email attachments
+- **Amazon SQS**: Queues email processing tasks
+- **AWS Lambda**: Processes highlights and generates output files
+
+Additional details on product requirements and architectures can be found in [product_brief.md](mdc:docs/product_brief.md)
+
+## Code Style and Structure
+- Write clear, modular TypeScript code with proper type definitions.
+- Follow functional programming patterns; avoid classes when not needed.
+- Document critical part of the code and exported functions using JSDoc. 
+- Implement proper error handling and logging.
+
+## Testing Convention
+- You can run the entire unit test suite with `npx vitest run`.
+- Each feature should have associated unit tests. 
+- Each test should focus on a specific aspect only. 
