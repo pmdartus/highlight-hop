@@ -2,16 +2,19 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { describe, test, expect } from "vitest";
 
-import { parse, parseSectionHeading } from "../src/parser/parser.ts";
+import { parseNotebook, parseSectionHeading } from "../src/parser.ts";
 
 function loadFixture(name: string) {
-  return fs.readFile(path.join(import.meta.dirname, "__fixtures__", name), "utf-8");
+  return fs.readFile(
+    path.join(import.meta.dirname, "__fixtures__", name),
+    "utf-8",
+  );
 }
 
 describe("parse", () => {
   test("highlights", async () => {
     const html = await loadFixture("highlights.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers.length).toBe(3);
     expect(result.markers).toMatchObject([
@@ -44,7 +47,7 @@ describe("parse", () => {
 
   test("highlight colors", async () => {
     const html = await loadFixture("hightlights-color.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers).toMatchObject([
       {
@@ -72,7 +75,7 @@ describe("parse", () => {
 
   test("location with pages", async () => {
     const html = await loadFixture("location-with-pages.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers.length).toBe(2);
     expect(result.markers).toMatchObject([
@@ -99,7 +102,7 @@ describe("parse", () => {
 
   test("notes without highlights", async () => {
     const html = await loadFixture("notes-without-highlights.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers.length).toBe(2);
     expect(result.markers).toMatchObject([
@@ -120,14 +123,14 @@ describe("parse", () => {
 
   test("bookmarks", async () => {
     const html = await loadFixture("bookmarks.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers).toEqual([]);
   });
 
   test("sanity check", async () => {
     const html = await loadFixture("sanity.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result).toMatchSnapshot();
   });

@@ -1,10 +1,9 @@
-import { parse as parseHtml, type ITag } from "html5parser";
-import { type INode } from "html5parser";
+import { parse as parseHtml, SyntaxKind } from "html5parser";
+import type { INode, ITag, IText } from "html5parser";
 
-import { isTagNode, findNode, getClassName, getTextContent } from "./utils.ts";
-import type { Notebook, Marker, MarkerType } from "./types.ts";
+import type { Marker, MarkerType, Notebook } from "./types.ts";
 
-export function parse(htmlContent: string): Notebook {
+export function parseNotebook(htmlContent: string): Notebook {
   const container = parseHtmlContent(htmlContent);
   const notebook = extractMetadataAndMarkers(container.body ?? []);
   const markers = mergeHighlightsAndNotes(notebook.markers);
@@ -211,4 +210,70 @@ export function parseSectionHeading(
   }
 
   return result;
+}
+
+/**
+ * Type guard to check if a node is a tag node
+ */
+function isTagNode(node: INode): node is ITag {
+  return node.type === SyntaxKind.Tag;
+}
+
+/**
+ * Type guard to check if a node is a text node
+ */
+function isTextNode(node: INode): node is IText {
+  return node.type === SyntaxKind.Text;
+}
+
+/**
+ * Finds a node based on a predicate.
+ * @param node - The node to search
+ * @param predicate - The predicate to find the node
+ * @returns The node if found, otherwise null
+ */
+function findNode(
+  node: INode,
+  predicate: (node: INode) => boolean,
+): INode | null {
+  if (predicate(node)) {
+    return node;
+  }
+
+  if (isTagNode(node) && node.body) {
+    for (const child of node.body) {
+      const result = findNode(child, predicate);
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Gets the class name from a node.
+ * @param node - The node to get the class name from
+ * @returns The class name if it exists, otherwise undefined
+ */
+function getClassName(node: INode): string | undefined {
+  if (isTagNode(node) && node.attributeMap) {
+    return node.attributeMap.class?.value?.value;
+  }
+  return undefined;
+}
+
+/**
+ * Gets the text content of a node.
+ * @param node - The node to get the text content from
+ * @returns The text content of the node
+ */
+function getTextContent(node: INode): string {
+  if (isTextNode(node)) {
+    return node.value.trim();
+  } else if (isTagNode(node) && node.body) {
+    return node.body.map(getTextContent).join("").trim();
+  }
+  return "";
 }

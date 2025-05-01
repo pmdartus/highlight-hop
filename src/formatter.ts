@@ -1,12 +1,4 @@
-import type { Notebook } from "./parser/types.ts";
-
-export type FormatType = "csv" | "markdown" | "json";
-
-export interface FormattedNotebook {
-  content: string;
-  filename: string;
-  contentType: string;
-}
+import type { FormattedNotebook, FormatType, Notebook } from "./types.ts";
 
 interface NotebookFormatter {
   name: FormatType;
@@ -77,14 +69,14 @@ const jsonFormatter: NotebookFormatter = {
   },
 };
 
-const formatters = {
+const SUPPORTED_FORMATTERS = {
   csv: csvFormatter,
   markdown: markdownFormatter,
   json: jsonFormatter,
 } as const;
 
 export const SUPPORTED_FORMATS = new Set(
-  Object.keys(formatters) as FormatType[],
+  Object.keys(SUPPORTED_FORMATTERS) as FormatType[],
 );
 
 export function formatNotebook(
@@ -93,7 +85,7 @@ export function formatNotebook(
 ): FormattedNotebook {
   const { format } = options;
 
-  const formatter = formatters[format];
+  const formatter = SUPPORTED_FORMATTERS[format];
   if (!formatter) {
     throw new Error(`Unsupported format: ${format}`);
   }

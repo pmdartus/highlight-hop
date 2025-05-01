@@ -10,12 +10,9 @@ import type {
   SQSHandler,
 } from "aws-lambda";
 
-import { parse } from "./parser/parser.ts";
-import {
-  formatNotebook,
-  SUPPORTED_FORMATS,
-  type FormatType,
-} from "./formatter.ts";
+import { parseNotebook } from "./parser.ts";
+import { formatNotebook, SUPPORTED_FORMATS } from "./formatter.ts";
+import type { FormatType } from "./types.ts";
 
 const s3Client = new S3Client();
 const sesClient = new SESv2Client();
@@ -89,7 +86,7 @@ async function processS3EventRecord(record: S3EventRecord) {
   const { sender, recipient, format, attachment } =
     getRequestDetails(parsedEmail);
 
-  const notebook = parse(attachment);
+  const notebook = parseNotebook(attachment);
   console.log(
     `Parsed notebook: "${notebook.title ?? "Untitled"}" with ${
       notebook.markers.length

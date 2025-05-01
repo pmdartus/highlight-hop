@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
+
 import { formatNotebook } from "../src/formatter.ts";
-import type { Notebook, Highlight, Note } from "../src/parser/types.ts";
+import type { Notebook, Highlight, Note } from "../src/types.ts";
 
 // Sample notebook data for testing
 const sampleNotebook: Notebook = {

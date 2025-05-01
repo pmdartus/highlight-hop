@@ -50,3 +50,11 @@ export interface Notebook {
   /** Array of all markers. */
   markers: Marker[];
 }
+
+export type FormatType = "csv" | "markdown" | "json";
+
+export interface FormattedNotebook {
+  content: string;
+  filename: string;
+  contentType: string;
+}
