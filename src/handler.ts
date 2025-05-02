@@ -1,6 +1,3 @@
-import { Buffer } from "node:buffer";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import PostalMime, { type Email } from "postal-mime";
 
 import type {
@@ -10,17 +7,20 @@ import type {
   SQSHandler,
 } from "aws-lambda";
 
-import { parseNotebook } from "./parser.ts";
-import { formatNotebook, SUPPORTED_FORMATS } from "./formatter.ts";
-import type { FormatType } from "./types.ts";
+import { parseNotebook } from "./notebook/parser.ts";
+import { formatNotebook, SUPPORTED_FORMATS } from "./notebook/formatter.ts";
+import type { FormatType } from "./notebook/types.ts";
 
-const s3Client = new S3Client();
-const sesClient = new SESv2Client();
+import { S3Service } from "./services/object.ts";
+import { SesService } from "./services/email.ts";
 
 const DOMAIN_NAME = process.env.DOMAIN_NAME;
 if (!DOMAIN_NAME) {
   throw new Error("DOMAIN_NAME environment variable is not set.");
 }
+
+const objectService = new S3Service();
+const emailService = new SesService();
 
 export const handler: SQSHandler = async (event) => {
   const failedMessages: SQSBatchItemFailure[] = [];
@@ -70,18 +70,7 @@ async function processS3EventRecord(record: S3EventRecord) {
 
   console.log(`Processing S3 object: s3://${bucket}/${key}`);
 
-  const getCommand = new GetObjectCommand({
-    Bucket: bucket,
-    Key: key,
-  });
-
-  const response = await s3Client.send(getCommand);
-  const body = await response.Body?.transformToWebStream();
-
-  if (!body) {
-    throw new Error(`No content found for S3 object: s3://${bucket}/${key}`);
-  }
-
+  const body = await objectService.getObject(bucket, key);
   const parsedEmail = await PostalMime.parse(body);
   const { sender, recipient, format, attachment } =
     getRequestDetails(parsedEmail);
@@ -106,40 +95,25 @@ async function processS3EventRecord(record: S3EventRecord) {
     notebook.markers.length
   } highlights/notes. The converted file is attached.`;
 
-  const sendCommand = new SendEmailCommand({
-    FromEmailAddress: recipient,
-    Destination: {
-      ToAddresses: [sender],
-    },
-    Content: {
-      Simple: {
-        Subject: {
-          Data: subject,
-          Charset: "UTF-8",
-        },
-        Body: {
-          Text: {
-            Data: summary,
-            Charset: "UTF-8",
-          },
-        },
-        Attachments: [
-          {
-            FileName: outputFilename,
-            ContentType: contentType,
-            RawContent: Buffer.from(formattedContent),
-          },
-        ],
-      },
-    },
-  });
-
   console.log(
     `Sending formatted highlights (${outputFilename}) to ${sender}...`,
   );
-  await sesClient.send(sendCommand);
+
+  await emailService.sendEmail({
+    from: recipient,
+    to: sender,
+    subject,
+    body: summary,
+    attachment: {
+      fileName: outputFilename,
+      contentType,
+      content: formattedContent,
+    },
+  });
+
   console.log(`Successfully sent email to ${sender}`);
 }
+
 interface ProcessingRequest {
   messageId: string;
   sender: string;

@@ -2,11 +2,14 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { describe, test, expect } from "vitest";
 
-import { parseNotebook, parseSectionHeading } from "../src/parser.ts";
+import {
+  parseNotebook,
+  parseSectionHeading,
+} from "../../src/notebook/parser.ts";
 
 function loadFixture(name: string) {
   return fs.readFile(
-    path.join(import.meta.dirname, "__fixtures__", name),
+    path.join(import.meta.dirname, "../__fixtures__", name),
     "utf-8",
   );
 }
