@@ -2,7 +2,9 @@
 
 By: _Test Author_
 
-### Highlight (Page 5, Location 10) - Section 1 - Basic
+## Section 1 - Basic
+
+### Highlight (Page 5, Location 10) - Chapter 1
 
 > This is a highlighted text
 
@@ -10,26 +12,28 @@ By: _Test Author_
 
 ---
 
-### Note (Page 10, Location 20) - Section 1 - Basic
+### Note (Page 10, Location 20) - Chapter 1
 
-> This is a note only
+**Note:** This is a note only
 
 ---
 
-### Highlight (Page 15, Location 30) - Section 2 - Edge case
+## Section 2 - Edge case
+
+### Highlight (Page 15, Location 30) - Chapter 2
 
 > With line breaks<br>
 > and &quot;quotes&quot;
 
 ---
 
-### Highlight (Page 15, Location 30) - Section 2 - Edge case
+### Highlight (Page 15, Location 30) - Chapter 2
 
 > With UTF-8 characters 🚀 and HTML tags &lt;br&gt; and &lt;b&gt;bold&lt;/b&gt;
 
 ---
 
-### Highlight (Page N/A, Location 30)
+### Highlight (Location 30)
 
 > Missing page
 

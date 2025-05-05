@@ -12,22 +12,36 @@ interface NotebookFormatter {
   format(notebook: Notebook): string;
 }
 
+const CSV_COLUMNS = [
+  "Type",
+  "Location",
+  "Page",
+  "Section",
+  "Chapter",
+  "Quote",
+  "Color",
+  "Note",
+];
+
 const csvFormatter: NotebookFormatter = {
   name: "csv",
   contentType: "text/csv",
   extension: "csv",
   format(notebook) {
-    const header = "Type,Location,Page,Chapter,Text,Note";
-    const rows = notebook.markers.map((m) =>
-      [
-        stringifyCsv(m.type),
-        stringifyCsv(m.location),
-        stringifyCsv(m.page),
-        stringifyCsv(m.section), // Using section as chapter for now
-        stringifyCsv(m.text),
-        stringifyCsv(m.type === "Highlight" ? m.note : ""), // Only include note for highlights
-      ].join(","),
-    );
+    const header = CSV_COLUMNS.join(",");
+    const rows = notebook.markers.map((marker) => {
+      const { type } = marker;
+      return [
+        type,
+        stringifyCsv(marker.location),
+        stringifyCsv(marker.page),
+        stringifyCsv(marker.section),
+        stringifyCsv(marker.chapter),
+        type === "Highlight" ? stringifyCsv(marker.quote) : "",
+        type === "Highlight" ? stringifyCsv(marker.color) : "",
+        stringifyCsv(marker.note),
+      ].join(",");
+    });
 
     return [header, ...rows].join("\n");
   },
@@ -44,18 +58,48 @@ const markdownFormatter: NotebookFormatter = {
       md += `By: _${notebook.authors}_\n\n`;
     }
 
+    let currentSection: string | undefined;
+
     for (const marker of notebook.markers) {
-      md += `### ${marker.type} (Page ${marker.page ?? "N/A"}, Location ${marker.location ?? "N/A"})${marker.section ? ` - ${marker.section}` : ""}\n\n`;
+      // Add a new section if the marker is in a different section than the previous marker
+      if (marker.section && marker.section !== currentSection) {
+        currentSection = marker.section;
+        md += `## ${currentSection}\n\n`;
+      }
 
-      // Add explicit line breaks to the text to ensure that the text is displayed correctly in the markdown
-      md += marker.text
-        .split("\n")
-        .map((line) => `> ${escapeHtml(line)}`)
-        .join("<br>\n");
+      // Add the marker heading
+      let markerHeading = `### ${marker.type}`;
 
-      md += "\n\n";
+      const locationDetails = [];
+      if (marker.page) {
+        locationDetails.push(`Page ${marker.page}`);
+      }
+      if (marker.location) {
+        locationDetails.push(`Location ${marker.location}`);
+      }
 
-      if (marker.type === "Highlight" && marker.note) {
+      if (locationDetails.length > 0) {
+        markerHeading += ` (${locationDetails.join(", ")})`;
+      }
+
+      if (marker.chapter) {
+        markerHeading += ` - ${marker.chapter}`;
+      }
+
+      md += `${markerHeading}\n\n`;
+
+      // Add the marker quote if it's a highlight. We add explicit line breaks to
+      // the text to ensure that the text is displayed correctly in the markdown.
+      if (marker.type === "Highlight") {
+        md += marker.quote
+          .split("\n")
+          .map((line) => `> ${escapeHtml(line)}`)
+          .join("<br>\n");
+        md += "\n\n";
+      }
+
+      // Add the marker note if it exists.
+      if (marker.note) {
         md += `**Note:** ${escapeHtml(marker.note)}\n\n`;
       }
 

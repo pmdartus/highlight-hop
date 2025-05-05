@@ -9,7 +9,7 @@
       "page": 5,
       "section": "Section 1 - Basic",
       "chapter": "Chapter 1",
-      "text": "This is a highlighted text",
+      "quote": "This is a highlighted text",
       "note": "This is a note"
     },
     {
@@ -18,7 +18,7 @@
       "page": 10,
       "section": "Section 1 - Basic",
       "chapter": "Chapter 1",
-      "text": "This is a note only"
+      "note": "This is a note only"
     },
     {
       "type": "Highlight",
@@ -27,7 +27,7 @@
       "page": 15,
       "section": "Section 2 - Edge case",
       "chapter": "Chapter 2",
-      "text": "With line breaks\nand \"quotes\""
+      "quote": "With line breaks\nand \"quotes\""
     },
     {
       "type": "Highlight",
@@ -36,20 +36,20 @@
       "page": 15,
       "section": "Section 2 - Edge case",
       "chapter": "Chapter 2",
-      "text": "With UTF-8 characters 🚀 and HTML tags <br> and <b>bold</b>"
+      "quote": "With UTF-8 characters 🚀 and HTML tags <br> and <b>bold</b>"
     },
     {
       "type": "Highlight",
       "color": "yellow",
       "location": 30,
-      "text": "Missing page"
+      "quote": "Missing page"
     },
     {
       "type": "Highlight",
       "color": "yellow",
       "location": 30,
       "page": 15,
-      "text": "Missing section and chapter"
+      "quote": "Missing section and chapter"
     }
   ]
 }

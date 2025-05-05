@@ -26,7 +26,7 @@ describe("parse", () => {
         color: "yellow",
         location: 10,
         section: "MOBY-DICK; or, THE WHALE.",
-        text: "MOBY-DICK",
+        quote: "MOBY-DICK",
       },
       {
         type: "Highlight",
@@ -34,7 +34,7 @@ describe("parse", () => {
         location: 248,
         section: "EXTRACTS. (Supplied by a Sub-Sub-Librarian).",
         chapter: "EXTRACTS.",
-        text: "I was told of a whale taken near Shetland.",
+        quote: "I was told of a whale taken near Shetland.",
         note: "Some note.",
       },
       {
@@ -42,7 +42,7 @@ describe("parse", () => {
         color: "yellow",
         location: 361,
         section: "CHAPTER 1. Loomings.",
-        text: "Call me Ishmael.",
+        quote: "Call me Ishmael.",
         note: "Another note.",
       },
     ]);
@@ -89,7 +89,7 @@ describe("parse", () => {
         page: 13,
         section: "Introduction",
         chapter: expect.any(String),
-        text: expect.any(String),
+        quote: expect.any(String),
       },
       {
         type: "Highlight",
@@ -98,7 +98,7 @@ describe("parse", () => {
         page: 14,
         section: "Introduction",
         chapter: expect.any(String),
-        text: expect.any(String),
+        quote: expect.any(String),
       },
     ]);
   });
@@ -113,13 +113,13 @@ describe("parse", () => {
         type: "Note",
         location: 795,
         section: expect.any(String),
-        text: "Note without highlight",
+        note: "Note without highlight",
       },
       {
         type: "Note",
         location: 795,
         section: expect.any(String),
-        text: "Another note without highlighting",
+        note: "Another note without highlighting",
       },
     ]);
   });

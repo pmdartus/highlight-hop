@@ -1,7 +1,7 @@
-Type,Location,Page,Chapter,Text,Note
-Highlight,10,5,Section 1 - Basic,This is a highlighted text,This is a note
-Note,20,10,Section 1 - Basic,This is a note only,
-Highlight,30,15,Section 2 - Edge case,"With line breaks\nand ""quotes""",
-Highlight,30,15,Section 2 - Edge case,With UTF-8 characters 🚀 and HTML tags <br> and <b>bold</b>,
-Highlight,30,,,Missing page,
-Highlight,30,15,,Missing section and chapter,
+Type,Location,Page,Section,Chapter,Quote,Color,Note
+Highlight,10,5,Section 1 - Basic,Chapter 1,This is a highlighted text,yellow,This is a note
+Note,20,10,Section 1 - Basic,Chapter 1,,,This is a note only
+Highlight,30,15,Section 2 - Edge case,Chapter 2,"With line breaks\nand ""quotes""",yellow,
+Highlight,30,15,Section 2 - Edge case,Chapter 2,With UTF-8 characters 🚀 and HTML tags <br> and <b>bold</b>,yellow,
+Highlight,30,,,,Missing page,yellow,
+Highlight,30,15,,,Missing section and chapter,yellow,

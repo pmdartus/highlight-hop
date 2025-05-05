@@ -14,7 +14,7 @@ const sampleNotebook: Notebook = {
       page: 5,
       section: "Section 1 - Basic",
       chapter: "Chapter 1",
-      text: "This is a highlighted text",
+      quote: "This is a highlighted text",
       note: "This is a note",
     } satisfies Highlight,
     {
@@ -23,7 +23,7 @@ const sampleNotebook: Notebook = {
       page: 10,
       section: "Section 1 - Basic",
       chapter: "Chapter 1",
-      text: "This is a note only",
+      note: "This is a note only",
     } satisfies Note,
     {
       type: "Highlight",
@@ -32,7 +32,7 @@ const sampleNotebook: Notebook = {
       page: 15,
       section: "Section 2 - Edge case",
       chapter: "Chapter 2",
-      text: 'With line breaks\nand "quotes"',
+      quote: 'With line breaks\nand "quotes"',
       note: undefined,
     } satisfies Highlight,
     {
@@ -42,7 +42,7 @@ const sampleNotebook: Notebook = {
       page: 15,
       section: "Section 2 - Edge case",
       chapter: "Chapter 2",
-      text: "With UTF-8 characters 🚀 and HTML tags <br> and <b>bold</b>",
+      quote: "With UTF-8 characters 🚀 and HTML tags <br> and <b>bold</b>",
       note: undefined,
     } satisfies Highlight,
     {
@@ -52,7 +52,7 @@ const sampleNotebook: Notebook = {
       page: undefined,
       section: undefined,
       chapter: undefined,
-      text: "Missing page",
+      quote: "Missing page",
       note: undefined,
     } satisfies Highlight,
     {
@@ -62,7 +62,7 @@ const sampleNotebook: Notebook = {
       page: 15,
       section: undefined,
       chapter: undefined,
-      text: "Missing section and chapter",
+      quote: "Missing section and chapter",
       note: undefined,
     } satisfies Highlight,
   ],

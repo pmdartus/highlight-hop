@@ -2,8 +2,6 @@
  * Base interface for all marker types containing common fields
  */
 export interface BaseMarker {
-  /** The type of marker ("Highlight" or "Note") */
-  type: string;
   /** Optional section name where the marker appears */
   section: string | undefined;
   /** Optional chapter name where the marker appears */
@@ -22,7 +20,7 @@ export interface Highlight extends BaseMarker {
   /** The color of the highlight */
   color: string;
   /** The highlighted text content */
-  text: string;
+  quote: string;
   /** Optional note associated with the highlight */
   note: string | undefined;
 }
@@ -33,10 +31,12 @@ export interface Highlight extends BaseMarker {
 export interface Note extends BaseMarker {
   type: "Note";
   /** The text content of the note */
-  text: string;
+  note: string;
 }
 
+/** Union type representing either a Highlight or Note */
 export type Marker = Highlight | Note;
+/** Type representing the possible marker types */
 export type MarkerType = Marker["type"];
 
 /**
@@ -51,10 +51,17 @@ export interface Notebook {
   markers: Marker[];
 }
 
+/** Supported output format types for notebook exports */
 export type FormatType = "csv" | "markdown" | "json";
 
+/**
+ * Represents a formatted notebook ready for output
+ */
 export interface FormattedNotebook {
+  /** The formatted content of the notebook */
   content: string;
+  /** The filename for the output file */
   filename: string;
+  /** The MIME content type for the output file */
   contentType: string;
 }
