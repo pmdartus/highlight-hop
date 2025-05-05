@@ -2,16 +2,22 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { describe, test, expect } from "vitest";
 
-import { parse, parseSectionHeading } from "../src/parser/parser.ts";
+import {
+  parseNotebook,
+  parseSectionHeading,
+} from "../../src/notebook/parser.ts";
 
 function loadFixture(name: string) {
-  return fs.readFile(path.join(import.meta.dirname, "__fixtures__", name), "utf-8");
+  return fs.readFile(
+    path.join(import.meta.dirname, "../__fixtures__", name),
+    "utf-8",
+  );
 }
 
 describe("parse", () => {
   test("highlights", async () => {
     const html = await loadFixture("highlights.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers.length).toBe(3);
     expect(result.markers).toMatchObject([
@@ -20,7 +26,7 @@ describe("parse", () => {
         color: "yellow",
         location: 10,
         section: "MOBY-DICK; or, THE WHALE.",
-        text: "MOBY-DICK",
+        quote: "MOBY-DICK",
       },
       {
         type: "Highlight",
@@ -28,7 +34,7 @@ describe("parse", () => {
         location: 248,
         section: "EXTRACTS. (Supplied by a Sub-Sub-Librarian).",
         chapter: "EXTRACTS.",
-        text: "I was told of a whale taken near Shetland.",
+        quote: "I was told of a whale taken near Shetland.",
         note: "Some note.",
       },
       {
@@ -36,7 +42,7 @@ describe("parse", () => {
         color: "yellow",
         location: 361,
         section: "CHAPTER 1. Loomings.",
-        text: "Call me Ishmael.",
+        quote: "Call me Ishmael.",
         note: "Another note.",
       },
     ]);
@@ -44,7 +50,7 @@ describe("parse", () => {
 
   test("highlight colors", async () => {
     const html = await loadFixture("hightlights-color.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers).toMatchObject([
       {
@@ -72,7 +78,7 @@ describe("parse", () => {
 
   test("location with pages", async () => {
     const html = await loadFixture("location-with-pages.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers.length).toBe(2);
     expect(result.markers).toMatchObject([
@@ -83,7 +89,7 @@ describe("parse", () => {
         page: 13,
         section: "Introduction",
         chapter: expect.any(String),
-        text: expect.any(String),
+        quote: expect.any(String),
       },
       {
         type: "Highlight",
@@ -92,14 +98,14 @@ describe("parse", () => {
         page: 14,
         section: "Introduction",
         chapter: expect.any(String),
-        text: expect.any(String),
+        quote: expect.any(String),
       },
     ]);
   });
 
   test("notes without highlights", async () => {
     const html = await loadFixture("notes-without-highlights.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers.length).toBe(2);
     expect(result.markers).toMatchObject([
@@ -107,27 +113,27 @@ describe("parse", () => {
         type: "Note",
         location: 795,
         section: expect.any(String),
-        text: "Note without highlight",
+        note: "Note without highlight",
       },
       {
         type: "Note",
         location: 795,
         section: expect.any(String),
-        text: "Another note without highlighting",
+        note: "Another note without highlighting",
       },
     ]);
   });
 
   test("bookmarks", async () => {
     const html = await loadFixture("bookmarks.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result.markers).toEqual([]);
   });
 
   test("sanity check", async () => {
     const html = await loadFixture("sanity.html");
-    const result = parse(html);
+    const result = parseNotebook(html);
 
     expect(result).toMatchSnapshot();
   });

@@ -1,6 +1,3 @@
-import { Buffer } from "node:buffer";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import PostalMime, { type Email } from "postal-mime";
 
 import type {
@@ -10,20 +7,20 @@ import type {
   SQSHandler,
 } from "aws-lambda";
 
-import { parse } from "./parser/parser.ts";
-import {
-  formatNotebook,
-  SUPPORTED_FORMATS,
-  type FormatType,
-} from "./formatter.ts";
+import { parseNotebook } from "./notebook/parser.ts";
+import { formatNotebook, SUPPORTED_FORMATS } from "./notebook/formatter.ts";
+import type { FormatType } from "./notebook/types.ts";
 
-const s3Client = new S3Client();
-const sesClient = new SESv2Client();
+import { S3Service } from "./services/object.ts";
+import { SesService, type EmailAttachment } from "./services/email.ts";
 
 const DOMAIN_NAME = process.env.DOMAIN_NAME;
 if (!DOMAIN_NAME) {
   throw new Error("DOMAIN_NAME environment variable is not set.");
 }
+
+const objectService = new S3Service();
+const emailService = new SesService();
 
 export const handler: SQSHandler = async (event) => {
   const failedMessages: SQSBatchItemFailure[] = [];
@@ -46,7 +43,8 @@ export const handler: SQSHandler = async (event) => {
       }
 
       for (const s3Record of s3Event.Records) {
-        await processS3EventRecord(s3Record);
+        const content = await loadS3Object(s3Record);
+        await handleEmail(content);
       }
     } catch (error) {
       console.error(`Error processing message ID ${record.messageId}:`, error);
@@ -59,13 +57,11 @@ export const handler: SQSHandler = async (event) => {
   };
 };
 
-async function processS3EventRecord(record: S3EventRecord) {
+async function loadS3Object(record: S3EventRecord): Promise<Uint8Array> {
   if (record.eventSource !== "aws:s3") {
-    console.warn(
-      "Event source is not S3, skipping record:",
-      record.eventSource,
+    throw new Error(
+      `Event source is not S3, skipping record: ${record.eventSource}`,
     );
-    return;
   }
 
   const bucket = record.s3.bucket.name;
@@ -73,114 +69,78 @@ async function processS3EventRecord(record: S3EventRecord) {
 
   console.log(`Processing S3 object: s3://${bucket}/${key}`);
 
-  const getCommand = new GetObjectCommand({
-    Bucket: bucket,
-    Key: key,
-  });
+  const body = await objectService.getObject(bucket, key);
+  return body;
+}
 
-  const response = await s3Client.send(getCommand);
-  const body = await response.Body?.transformToWebStream();
+async function handleEmail(content: Uint8Array) {
+  const email = await PostalMime.parse(content);
 
-  if (!body) {
-    throw new Error(`No content found for S3 object: s3://${bucket}/${key}`);
+  const sender = email.from?.address;
+  if (!sender) {
+    throw new Error("Sender address (From:) not found in the email.");
   }
 
-  const parsedEmail = await PostalMime.parse(body);
-  const { sender, recipient, format, attachment } =
-    getRequestDetails(parsedEmail);
+  const { recipient, format } = resolveRecipient(email);
 
-  const notebook = parse(attachment);
-  console.log(
-    `Parsed notebook: "${notebook.title ?? "Untitled"}" with ${
-      notebook.markers.length
-    } highlights/notes.`,
-  );
+  console.log(`Processing email from ${sender} to ${recipient}...`);
 
-  const {
-    content: formattedContent,
-    filename: outputFilename,
-    contentType,
-  } = formatNotebook(notebook, { format });
+  const attachment = resolveAttachment(email);
+  const notebook = parseNotebook(attachment);
 
-  const subject = `Re: ${parsedEmail.subject ?? "Your Kindle Highlights"}`;
+  // Create the subject and summary of the email.
+  const subject = `Re: ${email.subject ?? "Your Kindle Highlights"}`;
   const summary = `Successfully processed your Kindle highlights from "${
     notebook.title ?? "Unknown Title"
   }". Found ${
     notebook.markers.length
   } highlights/notes. The converted file is attached.`;
 
-  const sendCommand = new SendEmailCommand({
-    FromEmailAddress: recipient,
-    Destination: {
-      ToAddresses: [sender],
-    },
-    Content: {
-      Simple: {
-        Subject: {
-          Data: subject,
-          Charset: "UTF-8",
-        },
-        Body: {
-          Text: {
-            Data: summary,
-            Charset: "UTF-8",
-          },
-        },
-        Attachments: [
-          {
-            FileName: outputFilename,
-            ContentType: contentType,
-            RawContent: Buffer.from(formattedContent),
-          },
-        ],
-      },
-    },
+  // Add headers to the email to indicate that it is a reply to the original email.
+  const headers = {
+    "In-Reply-To": email.messageId,
+    References: email.messageId,
+  };
+
+  // Format the notebook and create an attachment.
+  const formattedNotebook = formatNotebook(notebook, { format });
+  const generatedAttachment: EmailAttachment = {
+    fileName: formattedNotebook.filename,
+    contentType: formattedNotebook.contentType,
+    content: formattedNotebook.content,
+  };
+
+  await emailService.sendEmail({
+    from: recipient,
+    to: sender,
+    headers,
+    subject,
+    body: summary,
+    attachment: generatedAttachment,
   });
 
-  console.log(
-    `Sending formatted highlights (${outputFilename}) to ${sender}...`,
-  );
-  await sesClient.send(sendCommand);
   console.log(`Successfully sent email to ${sender}`);
 }
-interface ProcessingRequest {
-  messageId: string;
-  sender: string;
+
+function resolveRecipient(email: Email): {
   recipient: string;
   format: FormatType;
-  attachment: string;
-}
-
-function getRequestDetails(email: Email): ProcessingRequest {
-  const { messageId } = email;
-
-  const senderAddress = email.from?.address;
-  if (!senderAddress) {
-    throw new Error("Sender address (From:) not found in the email.");
-  }
-
-  const recipients = email.to;
-  if (!recipients || recipients.length === 0) {
+} {
+  if (!email.to || email.to.length === 0) {
     throw new Error("Recipient address (To:) not found in the email.");
   }
 
-  const attachment = getHtmlAttachment(email);
-
-  for (const recipient of recipients!) {
-    const recipientAddress = recipient.address;
-    if (!recipientAddress) {
+  for (const { address: recipient } of email.to) {
+    if (!recipient) {
       continue;
     }
 
     for (const format of SUPPORTED_FORMATS) {
       const candidate = `${format}@${DOMAIN_NAME}`;
-      if (recipientAddress === candidate) {
+      if (recipient === candidate) {
         return {
-          messageId,
-          sender: senderAddress,
-          recipient: recipientAddress,
+          recipient,
           format,
-          attachment,
         };
       }
     }
@@ -189,7 +149,7 @@ function getRequestDetails(email: Email): ProcessingRequest {
   throw new Error("No supported format requested.");
 }
 
-function getHtmlAttachment(email: Email): string {
+function resolveAttachment(email: Email): string {
   if (!email.attachments || email.attachments.length === 0) {
     throw new Error("No attachments found in the email.");
   } else if (email.attachments.length > 1) {

@@ -1,4 +1,47 @@
-import { SyntaxKind, type ITag, type IText, type INode } from "html5parser";
+import { SyntaxKind } from "html5parser";
+import type { INode, ITag, IText } from "html5parser";
+
+import type { Notebook } from "./types.ts";
+
+/**
+ * Gets the slug for the title of a notebook.
+ */
+export function getTitleSlug(notebook: Notebook): string {
+  return (notebook.title ?? "highlights")
+    .replace(/[^a-z0-9]/gi, "_")
+    .toLowerCase();
+}
+
+/** Escapes a string for HTML. */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/** Stringifies a value for a CSV file. */
+export function stringifyCsv(
+  content: string | number | boolean | undefined,
+): string {
+  if (content === undefined) {
+    return "";
+  }
+
+  const stringValue = String(content);
+
+  if (
+    stringValue.includes('"') ||
+    stringValue.includes(",") ||
+    stringValue.includes("\n")
+  ) {
+    return `"${stringValue.replace(/"/g, '""').replace(/\n/g, "\\n")}"`;
+  }
+
+  return stringValue;
+}
 
 /**
  * Type guard to check if a node is a tag node
