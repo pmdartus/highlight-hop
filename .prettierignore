@@ -1,1 +1,2 @@
-tests/__fixtures__/*
+**/__fixtures__/*
+**/__snapshots__/*
