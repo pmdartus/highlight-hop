@@ -130,6 +130,7 @@ const processorLambda = new aws.lambda.Function("email-processor", {
 new aws.lambda.EventSourceMapping("lambda-trigger", {
   eventSourceArn: emailQueue.arn,
   functionName: processorLambda.arn,
+  batchSize: 1,
 });
 
 // S3 event notification to SQS

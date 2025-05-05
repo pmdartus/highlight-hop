@@ -11,6 +11,7 @@ export interface EmailOptions {
   to: string;
   subject: string;
   body: string;
+  headers?: Record<string, string>;
   attachment?: EmailAttachment;
 }
 
@@ -25,13 +26,27 @@ export class SesService implements EmailService {
     this.client = client ?? new SESv2Client();
   }
 
-  async sendEmail({
-    from,
-    to,
-    subject,
-    body,
-    attachment,
-  }: EmailOptions): Promise<unknown> {
+  async sendEmail(options: EmailOptions): Promise<unknown> {
+    const { from, to, subject, body, attachment } = options;
+
+    const Headers = Object.entries(options.headers ?? {}).map(
+      ([key, value]) => ({
+        Name: key,
+        Value: value,
+      }),
+    );
+
+    const Attachements = attachment
+      ? [
+          {
+            FileName: attachment.fileName,
+            ContentType: attachment.contentType,
+            RawContent: Buffer.isBuffer(attachment.content)
+              ? attachment.content
+              : Buffer.from(attachment.content),
+          },
+        ]
+      : undefined;
     const command = new SendEmailCommand({
       FromEmailAddress: from,
       Destination: {
@@ -49,17 +64,8 @@ export class SesService implements EmailService {
               Charset: "UTF-8",
             },
           },
-          Attachments: attachment
-            ? [
-                {
-                  FileName: attachment.fileName,
-                  ContentType: attachment.contentType,
-                  RawContent: Buffer.isBuffer(attachment.content)
-                    ? attachment.content
-                    : Buffer.from(attachment.content),
-                },
-              ]
-            : undefined,
+          Headers: Headers,
+          Attachments: Attachements,
         },
       },
     });
