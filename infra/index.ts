@@ -8,22 +8,23 @@ const OUTPUT_FORMATS = ["csv", "markdown", "json"];
 // S3 bucket for storing raw MIME objects
 const bucket = new aws.s3.BucketV2("email-inbound", {
   forceDestroy: true,
-  /* TODO: Enable lifecycle rules. */
-  //   lifecycleRules: [{
-  //     enabled: true,
-  //     expirations: [{
-  //       days: 1, // Delete after 1 day (minimum allowed by S3)
-  //     }],
-  //   }],
+});
 
-  /* TODO: Enable encryption. */
-  //   serverSideEncryptionConfigurations: [{
-  //     rules: [{
-  //       applyServerSideEncryptionByDefaults: [{
-  //         sseAlgorithm: "AES256",
-  //       }],
-  //     }],
-  //   }],
+// S3 bucket lifecycle configuration for cleanup
+new aws.s3.BucketLifecycleConfigurationV2("email-inbound-cleanup", {
+  bucket: bucket.id,
+  rules: [
+    {
+      id: "cleanup",
+      filter: {
+        prefix: "inbound/",
+      },
+      status: "Enabled",
+      expiration: {
+        days: 1,
+      },
+    },
+  ],
 });
 
 // SQS queue for email processing
@@ -79,7 +80,7 @@ new aws.iam.RolePolicy("email-processor-policy", {
       {
         Effect: "Allow",
         Action: ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-        Resource: [bucket.arn, pulumi.interpolate`${bucket.arn}/*`],
+        Resource: [bucket.arn, pulumi.interpolate`${bucket.arn}/inbound/*`],
       },
       {
         Effect: "Allow",
@@ -184,7 +185,7 @@ new aws.iam.RolePolicy("ses-s3-policy", {
       {
         Effect: "Allow",
         Action: "s3:PutObject",
-        Resource: pulumi.interpolate`${bucket.arn}/*`,
+        Resource: pulumi.interpolate`${bucket.arn}/inbound/*`,
       },
     ],
   },
@@ -202,7 +203,7 @@ new aws.s3.BucketPolicy("email-inbound-policy", {
           AWS: sesRole.arn,
         },
         Action: "s3:PutObject",
-        Resource: pulumi.interpolate`${bucket.arn}/*`,
+        Resource: pulumi.interpolate`${bucket.arn}/inbound/*`,
       },
     ],
   },
@@ -218,6 +219,7 @@ new aws.ses.ReceiptRule("valid-formats", {
   s3Actions: [
     {
       bucketName: bucket.id,
+      objectKeyPrefix: "inbound/",
       position: 1,
       iamRoleArn: sesRole.arn,
     },
