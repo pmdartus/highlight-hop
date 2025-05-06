@@ -78,7 +78,7 @@ new aws.iam.RolePolicy("email-processor-policy", {
     Statement: [
       {
         Effect: "Allow",
-        Action: ["s3:GetObject", "s3:PutObject"],
+        Action: ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
         Resource: [bucket.arn, pulumi.interpolate`${bucket.arn}/*`],
       },
       {

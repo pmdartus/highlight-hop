@@ -1,11 +1,6 @@
 import PostalMime, { type Email } from "postal-mime";
 
-import type {
-  S3Event,
-  S3EventRecord,
-  SQSBatchItemFailure,
-  SQSHandler,
-} from "aws-lambda";
+import type { S3Event, SQSBatchItemFailure, SQSHandler } from "aws-lambda";
 
 import { parseNotebook } from "./notebook/parser.ts";
 import { formatNotebook, SUPPORTED_FORMATS } from "./notebook/formatter.ts";
@@ -43,8 +38,18 @@ export const handler: SQSHandler = async (event) => {
       }
 
       for (const s3Record of s3Event.Records) {
-        const content = await loadS3Object(s3Record);
-        await handleEmail(content);
+        if (s3Record.eventSource !== "aws:s3") {
+          throw new Error(`Event source is not S3.`);
+        }
+
+        const { bucket, object } = s3Record.s3;
+
+        try {
+          const body = await objectService.getObject(bucket.name, object.key);
+          await handleEmail(body);
+        } finally {
+          await objectService.deleteObject(bucket.name, object.key);
+        }
       }
     } catch (error) {
       console.error(`Error processing message ID ${record.messageId}:`, error);
@@ -56,22 +61,6 @@ export const handler: SQSHandler = async (event) => {
     batchItemFailures: failedMessages,
   };
 };
-
-async function loadS3Object(record: S3EventRecord): Promise<Uint8Array> {
-  if (record.eventSource !== "aws:s3") {
-    throw new Error(
-      `Event source is not S3, skipping record: ${record.eventSource}`,
-    );
-  }
-
-  const bucket = record.s3.bucket.name;
-  const key = record.s3.object.key;
-
-  console.log(`Processing S3 object: s3://${bucket}/${key}`);
-
-  const body = await objectService.getObject(bucket, key);
-  return body;
-}
 
 async function handleEmail(content: Uint8Array) {
   const email = await PostalMime.parse(content);

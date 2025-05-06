@@ -1,7 +1,12 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  DeleteObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 export interface ObjectService {
   getObject(bucket: string, key: string): Promise<Uint8Array>;
+  deleteObject(bucket: string, key: string): Promise<void>;
 }
 
 export class S3Service implements ObjectService {
@@ -25,5 +30,14 @@ export class S3Service implements ObjectService {
     }
 
     return body;
+  }
+
+  async deleteObject(bucket: string, key: string): Promise<void> {
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+
+    await this.client.send(deleteCommand);
   }
 }
