@@ -1,24 +1,55 @@
+![Highlight Hop banner image](./assets/banner.jpg)
+
 # Highlight Hop
 
-A service that converts Kindle highlights from HTML to various formats (CSV, Markdown, JSON).
+> Own your Kindle highlights one email at a time.
 
-## Overview
+Convert your Kindle hightlights and notes to Markdown, CSV or JSON in a matter of seconds:
 
-Highlight Hop is an email-based workflow that converts Kindle highlights exported from iOS/Android Kindle apps (HTML attachment) into user-selected formats and returns the converted file to the user.
+- ✅ No vendor lock-in — you own your hightlights.
+- ✅ No browser extension to install.
+- ✅ No need to connect your Kindle to your computer.
 
-**How It Works:**
+Forward your favorite books annotations from the Kindle iOS or Android application to the email address of your choise to convert your highlights to the desired format:
 
-1. Send an email with a Kindle highlights HTML attachment to one of the following addresses:
+- For Markdown: [markdown@highlight-hop.dartus.fr](mailto:markdown@highlight-hop.dartus.fr)
+- For CSV: [csv@highlight-hop.dartus.fr](mailto:csv@highlight-hop.dartus.fr)
+- For JSON: [json@highlight-hop.dartus.fr](mailto:json@highlight-hop.dartus.fr)
 
-   - `csv@<domain-name>` - Convert to CSV format
-   - `markdown@<domain-name>` - Convert to Markdown format
-   - `json@<domain-name>` - Convert to JSON format
+## iOS Walkthrough
 
-2. The service processes the email, extracts the highlights, and converts them to the requested format.
+<table>
+  <tr>
+    <td style="width:33%"><strong>Step 1:</strong> Open the book, tap the center of the screen and then on the Menu icon</td>
+    <td style="width:33%"><strong>Step 2:</strong> Navigate to Annotations</td>
+    <td style="width:33%"><strong>Step 3:</strong> Tap on the Share icon</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/walkthrough/step-1.png" alt="Step 1"></td>
+    <td><img src="./assets/walkthrough/step-2.png" alt="Step 2"></td>
+    <td><img src="./assets/walkthrough/step-3.png" alt="Step 3"></td>
+  </tr>
+  <tr>
+    <td><strong>Step 4:</strong> Tap on Export</td>
+    <td><strong>Step 5:</strong> Enter the desired email address and let the magic happen</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><img src="./assets/walkthrough/step-4.png" alt="Step 4"></td>
+    <td><img src="./assets/walkthrough/step-5.png" alt="Step 5"></td>
+    <td></td>
+  </tr>
+</table>
 
-3. The converted file is sent back to you as an email attachment.
+## Getting started
 
-**Architecture:**
+```
+npm install
+npm run build
+npm run deploy
+```
+
+## Architecture & Design
 
 It uses a serverless architecture deployed on AWS. The service uses the following AWS components:
 
@@ -28,11 +59,3 @@ It uses a serverless architecture deployed on AWS. The service uses the followin
 - _AWS Lambda(Node.js)_ - Processes highlights and generates output files
 
 Detailed reqirements abou the project can be found in the [product brief](./docs/product_brief.md)
-
-## Getting started
-
-```
-npm install
-npm run build
-npm run deploy
-```
