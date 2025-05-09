@@ -6,9 +6,10 @@
 
 Convert your Kindle highlights and notes to Markdown, CSV, or JSON in seconds:
 
-- ✅ No vendor lock-in — own your reading data forever.
-- ✅ No browser extensions required.
-- ✅ No need to connect your Kindle to your computer.
+- 🔓 No vendor lock-in — Own your reading data forever. Export and keep your notes in an open format.
+- 💻 No browser extensions — No need to install anything.
+- 🔥 No signup required — You just need an email adress.
+- ⏱️ No need to connect your Kindle to your computer — Forward from your mobile app.
 
 Highlight Hop is an email bot to quickly extract your Kindle highlights. Simply forward your book annotations from the Kindle iOS or Android application to one of these email addresses to recieve your highlights and notes in the desired format:
 
@@ -16,7 +17,7 @@ Highlight Hop is an email bot to quickly extract your Kindle highlights. Simply 
 - For CSV: [csv@highlight-hop.dartus.fr](mailto:csv@highlight-hop.dartus.fr)
 - For JSON: [json@highlight-hop.dartus.fr](mailto:json@highlight-hop.dartus.fr)
 
-## iOS Walkthrough
+## Walkthrough
 
 <table>
   <tr>
@@ -48,17 +49,5 @@ Highlight Hop uses a serverless architecture deployed on AWS with the following 
 - _Amazon S3_ - Stores raw email attachments temporarily
 - _Amazon SQS_ - Queues email processing tasks
 - _AWS Lambda(Node.js)_ - Processes highlights and generates output files.
-
-```mermaid
-flowchart LR
-    User([User]) -->|Forwards highlights email| SES[Amazon SES]
-    SES -->|Stores attachments| S3[Amazon S3]
-    SES -->|Queues processing| SQS[Amazon SQS]
-    SQS -->|Triggers| Lambda[AWS Lambda]
-    S3 -->|Retrieves attachments| Lambda
-    Lambda -->|Converts format| Lambda
-    Lambda -->|Sends response| SES
-    SES -->|Delivers formatted highlights| User
-```
 
 Detailed requirements for the project can be found in the [product brief](./docs/product_brief.md)

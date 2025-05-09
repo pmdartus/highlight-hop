@@ -51,8 +51,16 @@ Provide an email‑based workflow that converts Kindle highlights exported from 
 
 ## 6  Sequence (Happy Path)
 
-```
-User → SES → S3 → SQS → Lambda → SES → User
+```mermaid
+flowchart LR
+    User([User]) -->|Forwards highlights email| SES[Amazon SES]
+    SES -->|Stores attachments| S3[Amazon S3]
+    SES -->|Queues processing| SQS[Amazon SQS]
+    SQS -->|Triggers| Lambda[AWS Lambda]
+    S3 -->|Retrieves attachments| Lambda
+    Lambda -->|Converts format| Lambda
+    Lambda -->|Sends response| SES
+    SES -->|Delivers formatted highlights| User
 ```
 
 ## 7  Error Handling & Edge Cases

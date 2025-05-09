@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Highlight Hop - Own your Kindle highlights</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2.1.1/out/light.css"
+    />
+    <style>
+      :root {
+        --button-base: #70aafb;
+        --button-hover: #4088e2;
+        font-size: 18px;
+      }
+
+      section {
+        margin: 4rem 0;
+        
+        &:first-child {
+          margin-top: 0;
+        }
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+
+      header {
+        padding: 2rem;
+      }
+
+      .email-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 0.5rem 0;
+      }
+      .email-container input {
+        flex-grow: 1;
+      }
+      .copy-button {
+        white-space: nowrap;
+      }
+      
+      .walkthrough {
+        margin: 2rem 0;
+      }
+      .walkthrough-step {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        align-items: center;
+      }
+      .walkthrough-step:last-child {
+        margin-bottom: 0;
+      }
+      .walkthrough-step img {
+        height: auto;
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 8px;
+      }
+      .github-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      @media (max-width: 768px) {
+        :root {
+          font-size: 16px;
+        }
+        section {
+          margin: 3rem 0;
+        }
+        .walkthrough-step {
+          flex-direction: column;
+          gap: 1rem;
+          align-items: flex-start;
+        }
+        .walkthrough-step img {
+          width: fit-content;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img
+        src="./banner_transparent.png"
+        alt="Highlight Hop Banner - Own your Kindle highlights one email at a time"
+      />
+    </header>
+    
+    <main>
+      <section>
+        <h1>Highlight Hop</h1>
+        <p>
+          Convert your Kindle highlights and notes to Markdown, CSV, or JSON in
+          seconds. Highlight Hop is an email bot to quickly extract your Kindle
+          highlights and notes.
+        </p>
+        <ul>
+          <li>
+            <strong>🔓 No vendor lock-in</strong> — Own your reading data
+            forever. Export and keep your notes in an open format.
+          </li>
+          <li>
+            <strong>💻 No browser extensions</strong> — No need to install
+            anything.
+          </li>
+          <li>
+            <strong>🔥 No signup required</strong> — You just need an email
+            adress.
+          </li>
+          <li>
+            <strong>
+              ⏱️ No need to connect your Kindle to your computer
+            </strong>
+            — Forward from your mobile app.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Getting started</h2>
+        <p>
+          Forward your book annotations from the Kindle iOS or Android
+          application to one of these email addresses to receive your highlights
+          and notes in the desired format:
+        </p>
+
+          <article>
+            For Markdown:
+            <div class="email-container">
+              <input type="email" value="markdown@highlight-hop.dartus.fr" readonly />
+              <button class="copy-button" data-email="markdown@highlight-hop.dartus.fr">Copy</button>
+            </div>
+          </article>
+
+        <article>
+          For CSV:
+          <div class="email-container">
+            <input type="email" value="csv@highlight-hop.dartus.fr" readonly />
+            <button class="copy-button" data-email="csv@highlight-hop.dartus.fr">Copy</button>
+          </div>
+        </article>
+
+        <article>
+          For JSON:
+          <div class="email-container">
+            <input type="email" value="json@highlight-hop.dartus.fr" readonly />
+            <button class="copy-button" data-email="json@highlight-hop.dartus.fr">Copy</button>
+          </div>
+        </article>
+      </section>
+
+      <section>
+        <h2>Walkthrough</h2>
+
+        <div class="walkthrough">
+          <div class="walkthrough-step">
+            <img src="./walkthrough/step-1.png" alt="Step 1 - Open the book, tap the center of the screen and then on the Menu icon" />
+            <div>
+              <p>
+                <strong>Step 1:</strong> Open the book, tap the center of the
+                screen and then on the Menu icon
+              </p>
+            </div>
+          </div>
+
+          <div class="walkthrough-step">
+            <img src="./walkthrough/step-2.png" alt="Step 2 - Navigate to Annotations" />
+            <div>
+              <p><strong>Step 2:</strong> Navigate to Annotations</p>
+            </div>
+          </div>
+
+          <div class="walkthrough-step">
+            <img src="./walkthrough/step-3.png" alt="Step 3 - Tap on the Share icon" />
+            <div>
+              <p><strong>Step 3:</strong> Tap on the Share icon</p>
+            </div>
+          </div>
+
+          <div class="walkthrough-step">
+            <img src="./walkthrough/step-4.png" alt="Step 4 - Tap on Export" />
+            <div>
+              <p><strong>Step 4:</strong> Tap on Export</p>
+            </div>
+          </div>
+
+          <div class="walkthrough-step">
+            <img src="./walkthrough/step-5.png" alt="Step 5 - Enter one of the email addresses listed above and press Send" />
+            <div>
+              <p>
+                <strong>Step 5:</strong> Enter one of the email addresses listed
+                above and press Send.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Want to contribute?</h2>
+        <p>
+          Highlight Hop is fully open source and available on GitHub. Feel free to
+          report issues, send a pull request, or fork the project for your own use.
+        </p>
+        <a
+          href="https://github.com/pmdartus/highlight-hop"
+          class="github-link"
+          target="_blank"
+        >
+          <svg
+            height="24"
+            width="24"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+            ></path>
+          </svg>
+          View on GitHub
+        </a>
+      </section>
+    </main> 
+
+    <footer>
+      <small>
+        Made with ❤️ by <a href="https://dartus.fr">Pierre-Marie Dartus</a>. No
+        affiliation with Amazon.
+      </small>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const copyButtons = document.querySelectorAll('.copy-button');
+        copyButtons.forEach(button => {
+          const originalText = button.textContent;
+          const email = button.dataset.email;
+
+          button.addEventListener('click', async (event) => {
+            await navigator.clipboard.writeText(email);
+            
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+              button.textContent = originalText;
+            }, 2000);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
