@@ -4,83 +4,172 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Highlight Hop - Own your Kindle highlights</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <meta
+      name="description"
+      content="Convert your Kindle highlights to Markdown, CSV, or JSON without any signup or browser extensions."
+    />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/water.css@2.1.1/out/light.css"
     />
     <style>
+      /* ---------------- */
+      /* Custom properties */
+      /* ---------------- */
       :root {
-        --button-base: #70aafb;
-        --button-hover: #4088e2;
-        font-size: 18px;
+        /* Colors */
+        --color-primary: #70aafb;
+        --color-primary-hover: #4088e2;
+        --color-text: #1a1a1a;
+        --color-text-subtle: #666;
+        --color-border: #ddd;
+        
+        /* Typography */
+        --font-size-base: clamp(16px, 4vw, 18px);
+        --line-height: 1.5;
+        
+        /* Spacing */
+        --space-xs: 0.25rem;
+        --space-sm: 0.5rem;
+        --space-md: 1rem;
+        --space-lg: 2rem;
+        --space-xl: 4rem;
+        
+        /* Border radius */
+        --radius: 8px;
+        
+        /* Other */
+        --transition: 0.2s ease;
+        
+        /* Base styles */
+        font-size: var(--font-size-base);
+        line-height: var(--line-height);
+        color: var(--color-text);
       }
 
+      /* ---------------- */
+      /* Layout Components */
+      /* ---------------- */
+      
+      /* Sections */
       section {
-        margin: 4rem 0;
+        margin-block: var(--space-xl);
         
         &:first-child {
-          margin-top: 0;
+          margin-block-start: 0;
         }
         
         &:last-child {
-          margin-bottom: 0;
+          margin-block-end: 0;
+        }
+      }
+      
+      /* Header & Footer */
+      header,
+      footer {
+        padding: var(--space-lg) var(--space-md);
+      }
+      
+      footer {
+        text-align: center;
+      }
+      
+      /* Banner */
+      .banner-img {
+        width: 100%;
+        aspect-ratio: 1496 / 620;
+      }
+      
+      /* ---------------- */
+      /* Email Components */
+      /* ---------------- */
+      .email-container {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        margin-block: var(--space-sm);
+      }
+      
+      .email-container input {
+        flex-grow: 1;
+        padding: var(--space-sm) var(--space-md);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+      }
+      
+      .copy-button {
+        white-space: nowrap;
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: background-color var(--transition);
+        
+        &:hover {
+          background-color: var(--color-primary-hover);
         }
       }
 
-      header {
-        padding: 2rem;
-      }
-
-      .email-container {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        margin: 0.5rem 0;
-      }
-      .email-container input {
-        flex-grow: 1;
-      }
-      .copy-button {
-        white-space: nowrap;
+      /* ---------------------- */
+      /* Walkthrough Components */
+      /* ---------------------- */
+      .walkthrough {
+        margin-block: var(--space-lg);
       }
       
-      .walkthrough {
-        margin: 2rem 0;
-      }
       .walkthrough-step {
         display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
+        gap: var(--space-lg);
+        margin-block-end: var(--space-lg);
         align-items: center;
+        
+        &:last-child {
+          margin-block-end: 0;
+        }
       }
-      .walkthrough-step:last-child {
-        margin-bottom: 0;
-      }
+      
       .walkthrough-step img {
         height: auto;
-        max-height: 500px;
-        object-fit: contain;
-        border-radius: 8px;
+        max-height: 450px;
+        aspect-ratio: 1170 / 2532;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: var(--radius);
       }
+      
+      /* ----------- */
+      /* GitHub Link */
+      /* ----------- */
       .github-link {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        background-color: #24292e;
+        color: white;
+        text-decoration: none;
+        border-radius: var(--radius);
+        transition: background-color var(--transition);
+        
+        &:hover {
+          background-color: #000;
+        }
       }
+      
+      /* ---------------- */
+      /* Responsive Adjustments */
+      /* ---------------- */
       @media (max-width: 768px) {
         :root {
-          font-size: 16px;
+          --space-xl: 3rem;
         }
-        section {
-          margin: 3rem 0;
-        }
+        
         .walkthrough-step {
           flex-direction: column;
-          gap: 1rem;
+          gap: var(--space-md);
           align-items: flex-start;
-        }
-        .walkthrough-step img {
-          width: fit-content;
         }
       }
     </style>
@@ -88,11 +177,12 @@
   <body>
     <header>
       <img
+        class="banner-img"
         src="./banner_transparent.png"
         alt="Highlight Hop Banner - Own your Kindle highlights one email at a time"
       />
     </header>
-    
+
     <main>
       <section>
         <h1>Highlight Hop</h1>
@@ -131,27 +221,57 @@
           and notes in the desired format:
         </p>
 
-          <article>
-            For Markdown:
-            <div class="email-container">
-              <input type="email" value="markdown@highlight-hop.dartus.fr" readonly />
-              <button class="copy-button" data-email="markdown@highlight-hop.dartus.fr">Copy</button>
-            </div>
-          </article>
+        <article>
+          For Markdown:
+          <div class="email-container">
+            <input
+              type="email"
+              value="markdown@highlight-hop.dartus.fr"
+              readonly
+              aria-label="Email address for markdown format"
+            />
+            <button
+              class="copy-button"
+              data-email="markdown@highlight-hop.dartus.fr"
+            >
+              Copy
+            </button>
+          </div>
+        </article>
 
         <article>
           For CSV:
           <div class="email-container">
-            <input type="email" value="csv@highlight-hop.dartus.fr" readonly />
-            <button class="copy-button" data-email="csv@highlight-hop.dartus.fr">Copy</button>
+            <input
+              type="email"
+              value="csv@highlight-hop.dartus.fr"
+              readonly
+              aria-label="Email address for CSV format"
+            />
+            <button
+              class="copy-button"
+              data-email="csv@highlight-hop.dartus.fr"
+            >
+              Copy
+            </button>
           </div>
         </article>
 
         <article>
           For JSON:
           <div class="email-container">
-            <input type="email" value="json@highlight-hop.dartus.fr" readonly />
-            <button class="copy-button" data-email="json@highlight-hop.dartus.fr">Copy</button>
+            <input
+              type="email"
+              value="json@highlight-hop.dartus.fr"
+              readonly
+              aria-label="Email address for JSON format"
+            />
+            <button
+              class="copy-button"
+              data-email="json@highlight-hop.dartus.fr"
+            >
+              Copy
+            </button>
           </div>
         </article>
       </section>
@@ -161,7 +281,10 @@
 
         <div class="walkthrough">
           <div class="walkthrough-step">
-            <img src="./walkthrough/step-1.png" alt="Step 1 - Open the book, tap the center of the screen and then on the Menu icon" />
+            <img
+              src="./walkthrough/step-1.png"
+              alt="Step 1 - Open the book, tap the center of the screen and then on the Menu icon"
+            />
             <div>
               <p>
                 <strong>Step 1:</strong> Open the book, tap the center of the
@@ -171,14 +294,20 @@
           </div>
 
           <div class="walkthrough-step">
-            <img src="./walkthrough/step-2.png" alt="Step 2 - Navigate to Annotations" />
+            <img
+              src="./walkthrough/step-2.png"
+              alt="Step 2 - Navigate to Annotations"
+            />
             <div>
               <p><strong>Step 2:</strong> Navigate to Annotations</p>
             </div>
           </div>
 
           <div class="walkthrough-step">
-            <img src="./walkthrough/step-3.png" alt="Step 3 - Tap on the Share icon" />
+            <img
+              src="./walkthrough/step-3.png"
+              alt="Step 3 - Tap on the Share icon"
+            />
             <div>
               <p><strong>Step 3:</strong> Tap on the Share icon</p>
             </div>
@@ -192,7 +321,10 @@
           </div>
 
           <div class="walkthrough-step">
-            <img src="./walkthrough/step-5.png" alt="Step 5 - Enter one of the email addresses listed above and press Send" />
+            <img
+              src="./walkthrough/step-5.png"
+              alt="Step 5 - Enter one of the email addresses listed above and press Send"
+            />
             <div>
               <p>
                 <strong>Step 5:</strong> Enter one of the email addresses listed
@@ -206,13 +338,16 @@
       <section>
         <h2>Want to contribute?</h2>
         <p>
-          Highlight Hop is fully open source and available on GitHub. Feel free to
-          report issues, send a pull request, or fork the project for your own use.
+          Highlight Hop is fully open source and available on GitHub. Feel free
+          to report issues, send a pull request, or fork the project for your
+          own use.
         </p>
         <a
           href="https://github.com/pmdartus/highlight-hop"
           class="github-link"
           target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View Highlight Hop on GitHub"
         >
           <svg
             height="24"
@@ -228,7 +363,7 @@
           View on GitHub
         </a>
       </section>
-    </main> 
+    </main>
 
     <footer>
       <small>
@@ -238,16 +373,16 @@
     </footer>
 
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const copyButtons = document.querySelectorAll('.copy-button');
-        copyButtons.forEach(button => {
+      document.addEventListener("DOMContentLoaded", () => {
+        const copyButtons = document.querySelectorAll(".copy-button");
+        copyButtons.forEach((button) => {
           const originalText = button.textContent;
           const email = button.dataset.email;
 
-          button.addEventListener('click', async (event) => {
+          button.addEventListener("click", async (event) => {
             await navigator.clipboard.writeText(email);
-            
-            button.textContent = 'Copied!';
+
+            button.textContent = "Copied!";
             setTimeout(() => {
               button.textContent = originalText;
             }, 2000);
