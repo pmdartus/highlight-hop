@@ -27,14 +27,14 @@ export class SesService implements EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<unknown> {
-    const { from, to, subject, body, attachment } = options;
+    const { from, to, subject, body, attachment, headers = {} } = options;
 
-    const Headers = Object.entries(options.headers ?? {}).map(
-      ([key, value]) => ({
-        Name: key,
-        Value: value,
-      }),
-    );
+    console.log(`Sending email from ${from} to ${to} with subject: ${subject}`);
+
+    const Headers = Object.entries(headers).map(([key, value]) => ({
+      Name: key,
+      Value: value,
+    }));
 
     const Attachements = attachment
       ? [

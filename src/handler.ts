@@ -5,12 +5,16 @@ import type { S3Event, SQSBatchItemFailure, SQSHandler } from "aws-lambda";
 import {
   parseNotebook,
   formatNotebook,
-  SUPPORTED_FORMATS,
   type FormatType,
 } from "./notebook/index.ts";
 
 import { S3Service } from "./services/object.ts";
 import { SesService, type EmailAttachment } from "./services/email.ts";
+import {
+  HighlightHopError,
+  MissingAttachmentError,
+  UnsupportedFormatError,
+} from "./errors.ts";
 
 const DOMAIN_NAME = process.env.DOMAIN_NAME;
 if (!DOMAIN_NAME) {
@@ -23,6 +27,8 @@ const emailService = new SesService();
 export const handler: SQSHandler = async (event) => {
   const failedMessages: SQSBatchItemFailure[] = [];
 
+  console.log(`Received SQS event with ${event.Records.length} records.`);
+
   for (const record of event.Records) {
     try {
       if (record.eventSource !== "aws:sqs") {
@@ -33,12 +39,16 @@ export const handler: SQSHandler = async (event) => {
         continue;
       }
 
+      console.log(`Processing SQS record: ${record.body}`);
+
       const s3Event: S3Event = JSON.parse(record.body);
       if (!s3Event.Records || !Array.isArray(s3Event.Records)) {
         throw new Error(
           "SQS message body is not a valid S3 event notification.",
         );
       }
+
+      console.log(`Processing ${s3Event.Records.length} S3 records.`);
 
       for (const s3Record of s3Event.Records) {
         if (s3Record.eventSource !== "aws:s3") {
@@ -68,82 +78,63 @@ export const handler: SQSHandler = async (event) => {
 async function handleEmail(content: Uint8Array) {
   const email = await PostalMime.parse(content);
 
-  const sender = email.from?.address;
-  if (!sender) {
-    throw new Error("Sender address (From:) not found in the email.");
-  }
+  console.log(
+    `Processing email from ${email.from.address} with subject: ${email.subject}`,
+  );
+  console.log(`Email headers: ${JSON.stringify(email.headers)}`);
 
-  const { recipient, format } = resolveRecipient(email);
-
-  console.log(`Processing email from ${sender} to ${recipient}...`);
-
-  const attachment = resolveAttachment(email);
-  const notebook = parseNotebook(attachment);
-
-  // Create the subject and summary of the email.
-  const subject = `Re: ${email.subject ?? "Your Kindle Highlights"}`;
-  const summary = `Successfully processed your Kindle highlights from "${
-    notebook.title ?? "Unknown Title"
-  }". Found ${
-    notebook.markers.length
-  } highlights/notes. The converted file is attached.`;
-
-  // Add headers to the email to indicate that it is a reply to the original email.
-  const headers = {
-    "In-Reply-To": email.messageId,
-    References: email.messageId,
-  };
-
-  // Format the notebook and create an attachment.
-  const formattedNotebook = formatNotebook(notebook, { format });
-  const generatedAttachment: EmailAttachment = {
-    fileName: formattedNotebook.filename,
-    contentType: formattedNotebook.contentType,
-    content: formattedNotebook.content,
-  };
-
-  await emailService.sendEmail({
-    from: recipient,
-    to: sender,
-    headers,
-    subject,
-    body: summary,
-    attachment: generatedAttachment,
-  });
-
-  console.log(`Successfully sent email to ${sender}`);
-}
-
-function resolveRecipient(email: Email): {
-  recipient: string;
-  format: FormatType;
-} {
-  if (!email.to || email.to.length === 0) {
-    throw new Error("Recipient address (To:) not found in the email.");
-  }
-
-  for (const { address: recipient } of email.to) {
-    if (!recipient) {
-      continue;
+  try {
+    const format = email.headers.find((header) => header.key === "x-format")
+      ?.value as FormatType;
+    if (!format) {
+      throw new Error("Format header not found in the email.");
     }
 
-    for (const format of SUPPORTED_FORMATS) {
-      const candidate = `${format}@${DOMAIN_NAME}`;
-      if (recipient === candidate) {
-        return {
-          recipient,
-          format,
-        };
-      }
+    const rawNotebook = getAttachedNotebook(email);
+    const notebook = parseNotebook(rawNotebook);
+    const formattedNotebook = formatNotebook(notebook, { format });
+
+    const summary = `Successfully processed your Kindle highlights from "${
+      notebook.title ?? "Unknown Title"
+    }". Found ${
+      notebook.markers.length
+    } highlights/notes. You can find the converted ${format} file attached.`;
+
+    await sendReplyEmail(email, {
+      body: summary,
+      attachment: {
+        fileName: formattedNotebook.filename,
+        contentType: formattedNotebook.contentType,
+        content: formattedNotebook.content,
+      },
+    });
+  } catch (error) {
+    let isUnexpectedError: boolean;
+    let messageBody: string;
+
+    if (error instanceof HighlightHopError) {
+      isUnexpectedError = false;
+      messageBody = `Highlight Hop failed to process your email:\n${error.message}`;
+    } else {
+      isUnexpectedError = true;
+      messageBody = `Highlight Hop failed to process your email:\nAn unexpected error occurred. Please try again later.`;
+    }
+
+    console.error(`An error occurred while processing your email:`, error);
+
+    await sendReplyEmail(email, {
+      body: messageBody,
+    });
+
+    if (isUnexpectedError) {
+      throw error;
     }
   }
-
-  throw new Error("No supported format requested.");
 }
 
-function resolveAttachment(email: Email): string {
+function getAttachedNotebook(email: Email): string {
   if (!email.attachments || email.attachments.length === 0) {
-    throw new Error("No attachments found in the email.");
+    throw new MissingAttachmentError();
   } else if (email.attachments.length > 1) {
     console.warn(
       `Multiple attachments found (${email.attachments.length}). Processing only the first HTML attachment.`,
@@ -155,13 +146,38 @@ function resolveAttachment(email: Email): string {
   );
 
   if (!htmlAttachment) {
-    throw new Error(
-      "No HTML attachment found. Please ensure the email contains one attachment with Content-Type: text/html.",
-    );
+    throw new UnsupportedFormatError();
   }
 
   const { content } = htmlAttachment;
   return content instanceof ArrayBuffer
     ? new TextDecoder().decode(content)
     : content;
+}
+
+async function sendReplyEmail(
+  email: Email,
+  config: {
+    body: string;
+    subject?: string;
+    attachment?: EmailAttachment;
+  },
+) {
+  const { body, attachment } = config;
+  const subject = `Re: ${email.subject ?? config.subject ?? ""}`;
+
+  // Add headers to the email to indicate that it is a reply to the original email.
+  const headers = {
+    "In-Reply-To": email.messageId,
+    References: email.messageId,
+  };
+
+  await emailService.sendEmail({
+    from: `no-reply@${DOMAIN_NAME}`,
+    to: email.from.address!,
+    headers,
+    subject,
+    body,
+    attachment,
+  });
 }

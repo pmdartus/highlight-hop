@@ -210,27 +210,36 @@ new aws.s3.BucketPolicy("email-inbound-policy", {
 });
 
 // SES receiving rule for valid formats
-new aws.ses.ReceiptRule("valid-formats", {
-  name: "valid-formats",
-  enabled: true,
-  ruleSetName: ruleSet.ruleSetName,
-  recipients: OUTPUT_FORMATS.map((format) => `${format}@${DOMAIN_NAME}`),
-  scanEnabled: true,
-  s3Actions: [
-    {
-      bucketName: bucket.id,
-      objectKeyPrefix: "inbound/",
-      position: 1,
-      iamRoleArn: sesRole.arn,
-    },
-  ],
-  stopActions: [
-    {
-      scope: "RuleSet",
-      position: 2,
-    },
-  ],
-});
+for (const format of OUTPUT_FORMATS) {
+  new aws.ses.ReceiptRule(`handle-${format}`, {
+    name: `handle-${format}`,
+    enabled: true,
+    ruleSetName: ruleSet.ruleSetName,
+    recipients: [`${format}@${DOMAIN_NAME}`],
+    scanEnabled: true,
+    addHeaderActions: [
+      {
+        headerName: "X-Format",
+        headerValue: format,
+        position: 1,
+      },
+    ],
+    s3Actions: [
+      {
+        bucketName: bucket.id,
+        objectKeyPrefix: "inbound/",
+        position: 2,
+        iamRoleArn: sesRole.arn,
+      },
+    ],
+    stopActions: [
+      {
+        scope: "RuleSet",
+        position: 3,
+      },
+    ],
+  });
+}
 
 // SES active rule set
 new aws.ses.ActiveReceiptRuleSet("active", {
