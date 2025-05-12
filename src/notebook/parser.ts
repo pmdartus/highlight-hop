@@ -1,6 +1,7 @@
 import { parse as parseHtml } from "html5parser";
 import type { INode, ITag } from "html5parser";
 
+import { NotebookParseError } from "./errors.ts";
 import { findNode, getClassName, isTagNode, getTextContent } from "./utils.ts";
 import type {
   BaseMarker,
@@ -35,7 +36,9 @@ function parseHtmlContent(htmlContent: string): ITag {
 
   const html = ast.find((node) => isTagNode(node) && node.name === "html");
   if (!html) {
-    throw new Error('Could not find "html" element.');
+    throw new NotebookParseError('Could not find "html" element.', {
+      offset: ast.at(-1)?.end,
+    });
   }
 
   const container = findNode(html, (node) => {
@@ -46,7 +49,9 @@ function parseHtmlContent(htmlContent: string): ITag {
     );
   });
   if (!container || !isTagNode(container) || !container.body) {
-    throw new Error("Could not locate root container element.");
+    throw new NotebookParseError("Could not locate root container element.", {
+      offset: container?.start ?? ast.at(-1)?.end,
+    });
   }
   return container;
 }
@@ -94,7 +99,9 @@ function extractMetadataAndMarkers(nodes: INode[]): Notebook {
         const content = getTextContent(elm);
         const sectionHeading = parseSectionHeading(content);
         if (!sectionHeading) {
-          throw new Error("Failed to parse section heading.");
+          throw new NotebookParseError("Failed to parse section heading.", {
+            offset: elm.end,
+          });
         }
 
         // Ignore bookmarks
@@ -109,7 +116,9 @@ function extractMetadataAndMarkers(nodes: INode[]): Notebook {
 
       case "noteText": {
         if (!currentHeading) {
-          throw new Error("No current heading found.");
+          throw new NotebookParseError("No current heading found.", {
+            offset: elm.start,
+          });
         }
 
         const content = getTextContent(elm);
@@ -144,7 +153,9 @@ function extractMetadataAndMarkers(nodes: INode[]): Notebook {
   }
 
   if (currentHeading) {
-    throw new Error("Unclosed heading found.");
+    throw new NotebookParseError("Unclosed heading found.", {
+      offset: elements.at(-1)?.end,
+    });
   }
 
   return { title, authors, markers };

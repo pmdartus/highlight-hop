@@ -1,7 +1,8 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, it } from "vitest";
 
+import { NotebookParseError } from "../../src/notebook/errors.ts";
 import {
   parseNotebook,
   parseSectionHeading,
@@ -236,5 +237,76 @@ describe("section headings", () => {
         page: 13,
       });
     });
+  });
+});
+
+describe("Parsing error", () => {
+  it("should throw when HTML element is not found", () => {
+    const invalidHtml = "<body></body>";
+    expect(() => parseNotebook(invalidHtml)).toThrow(
+      new NotebookParseError('Could not find "html" element.', {
+        offset: 13,
+      }),
+    );
+  });
+
+  it("should throw when root container element is not found", () => {
+    const invalidHtml = "<html><body></body></html>";
+    expect(() => parseNotebook(invalidHtml)).toThrow(
+      new NotebookParseError("Could not locate root container element.", {
+        offset: 26,
+      }),
+    );
+  });
+
+  it("should throw when section heading parsing fails", () => {
+    const invalidHtml = `
+      <html>
+        <body>
+          <div class="bodyContainer">
+            <div class="noteHeading">Invalid Heading Format</div>
+          </div>
+        </body>
+      </html>
+    `;
+    expect(() => parseNotebook(invalidHtml)).toThrow(
+      new NotebookParseError("Failed to parse section heading.", {
+        offset: 132,
+      }),
+    );
+  });
+
+  it("should throw when no current heading is found for a note text", () => {
+    const invalidHtml = `
+      <html>
+        <body>
+          <div class="bodyContainer">
+            <div class="noteText">Some note text without a heading</div>
+          </div>
+        </body>
+      </html>
+    `;
+    expect(() => parseNotebook(invalidHtml)).toThrow(
+      new NotebookParseError("No current heading found.", {
+        offset: 79,
+      }),
+    );
+  });
+
+  it("should throw when an unclosed heading is found", () => {
+    const invalidHtml = `
+      <html>
+        <body>
+          <div class="bodyContainer">
+            <div class="noteHeading">Highlight(yellow) - Location 123</div>
+          </div>
+        </body>
+      </html>
+    `;
+    expect(() => parseNotebook(invalidHtml)).toThrow(
+      new NotebookParseError("Unclosed heading found.", {
+        offset: 142,
+      }),
+    );
   });
 });

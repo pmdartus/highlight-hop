@@ -2,9 +2,12 @@ import PostalMime, { type Email } from "postal-mime";
 
 import type { S3Event, SQSBatchItemFailure, SQSHandler } from "aws-lambda";
 
-import { parseNotebook } from "./notebook/parser.ts";
-import { formatNotebook, SUPPORTED_FORMATS } from "./notebook/formatter.ts";
-import type { FormatType } from "./notebook/types.ts";
+import {
+  parseNotebook,
+  formatNotebook,
+  SUPPORTED_FORMATS,
+  type FormatType,
+} from "./notebook/index.ts";
 
 import { S3Service } from "./services/object.ts";
 import { SesService, type EmailAttachment } from "./services/email.ts";
